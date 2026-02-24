@@ -11,7 +11,8 @@ from hobson.config import settings
 from hobson.db import HobsonDB
 from hobson.workflows.business_review import BUSINESS_REVIEW_PROMPT
 from hobson.workflows.content_pipeline import CONTENT_PIPELINE_PROMPT
-from hobson.workflows.design_batch import DESIGN_BATCH_PROMPT
+from hobson.workflows.bootstrap_diary import BOOTSTRAP_DIARY_PROMPT
+from hobson.workflows.design_batch import DESIGN_BATCH_BOOTSTRAP_PROMPT, DESIGN_BATCH_PROMPT
 from hobson.workflows.morning_briefing import MORNING_BRIEFING_PROMPT
 from hobson.workflows.substack_dispatch import SUBSTACK_DISPATCH_PROMPT
 
@@ -75,8 +76,9 @@ async def run_workflow(agent, workflow_name: str, message: str):
 
 
 def setup_schedules(agent):
-    """Register all scheduled workflows."""
+    """Register all scheduled workflows. Cadence depends on bootstrap_mode."""
 
+    # Morning briefing: always daily 7am ET
     scheduler.add_job(
         run_workflow,
         CronTrigger(hour=7, minute=0, timezone="America/New_York"),
@@ -84,20 +86,49 @@ def setup_schedules(agent):
         id="morning_briefing",
     )
 
-    scheduler.add_job(
-        run_workflow,
-        CronTrigger(day_of_week="mon,wed,fri", hour=10, timezone="America/New_York"),
-        args=[agent, "content_pipeline", CONTENT_PIPELINE_PROMPT],
-        id="content_pipeline",
-    )
+    if settings.bootstrap_mode:
+        # Content pipeline: 3x/day (8am, 1pm, 6pm ET)
+        for hour, suffix in [(8, "am"), (13, "midday"), (18, "pm")]:
+            scheduler.add_job(
+                run_workflow,
+                CronTrigger(hour=hour, minute=0, timezone="America/New_York"),
+                args=[agent, "content_pipeline", CONTENT_PIPELINE_PROMPT],
+                id=f"content_pipeline_{suffix}",
+            )
 
-    scheduler.add_job(
-        run_workflow,
-        CronTrigger(day_of_week="mon", hour=14, timezone="America/New_York"),
-        args=[agent, "design_batch", DESIGN_BATCH_PROMPT],
-        id="design_batch",
-    )
+        # Bootstrap diary: daily 9pm ET
+        scheduler.add_job(
+            run_workflow,
+            CronTrigger(hour=21, minute=0, timezone="America/New_York"),
+            args=[agent, "bootstrap_diary", BOOTSTRAP_DIARY_PROMPT],
+            id="bootstrap_diary",
+        )
 
+        # Design batch: daily 2pm ET
+        scheduler.add_job(
+            run_workflow,
+            CronTrigger(hour=14, minute=0, timezone="America/New_York"),
+            args=[agent, "design_batch", DESIGN_BATCH_BOOTSTRAP_PROMPT],
+            id="design_batch",
+        )
+    else:
+        # Content pipeline: MWF 10am ET
+        scheduler.add_job(
+            run_workflow,
+            CronTrigger(day_of_week="mon,wed,fri", hour=10, timezone="America/New_York"),
+            args=[agent, "content_pipeline", CONTENT_PIPELINE_PROMPT],
+            id="content_pipeline",
+        )
+
+        # Design batch: Monday 2pm ET
+        scheduler.add_job(
+            run_workflow,
+            CronTrigger(day_of_week="mon", hour=14, timezone="America/New_York"),
+            args=[agent, "design_batch", DESIGN_BATCH_PROMPT],
+            id="design_batch",
+        )
+
+    # Substack dispatch: always Friday 3pm ET
     scheduler.add_job(
         run_workflow,
         CronTrigger(day_of_week="fri", hour=15, timezone="America/New_York"),
@@ -105,6 +136,7 @@ def setup_schedules(agent):
         id="substack_dispatch",
     )
 
+    # Business review: always Sunday 6pm ET
     scheduler.add_job(
         run_workflow,
         CronTrigger(day_of_week="sun", hour=18, timezone="America/New_York"),
