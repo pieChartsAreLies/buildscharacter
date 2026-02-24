@@ -14,6 +14,13 @@ from hobson.tools.obsidian import (
     write_note,
 )
 from hobson.tools.git_ops import create_blog_post_pr, list_open_blog_prs
+from hobson.tools.printful import (
+    create_store_product,
+    get_catalog_product_variants,
+    list_catalog_products,
+    list_store_products,
+    upload_design_file,
+)
 from hobson.tools.telegram import send_alert, send_approval_request, send_message
 
 
@@ -37,6 +44,7 @@ You have access to tools for:
 - Sending Telegram messages to your owner for approvals and alerts
 - Reading vault content to inform decisions
 - Creating blog post PRs on GitHub for content review
+- Managing the Printful merch pipeline (browse catalog, upload designs, create products)
 
 ## Operating Principles
 - Log significant actions to your daily log in Obsidian
@@ -56,6 +64,11 @@ TOOLS = [
     send_approval_request,
     create_blog_post_pr,
     list_open_blog_prs,
+    list_catalog_products,
+    get_catalog_product_variants,
+    upload_design_file,
+    create_store_product,
+    list_store_products,
 ]
 
 

@@ -10,6 +10,7 @@ from apscheduler.triggers.cron import CronTrigger
 from hobson.config import settings
 from hobson.db import HobsonDB
 from hobson.workflows.content_pipeline import CONTENT_PIPELINE_PROMPT
+from hobson.workflows.design_batch import DESIGN_BATCH_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ def setup_schedules(agent):
     scheduler.add_job(
         run_workflow,
         CronTrigger(day_of_week="mon", hour=14, timezone="America/New_York"),
-        args=[agent, "design_batch", "Run the design batch: generate 5-10 new merch design concepts, evaluate them against brand guidelines, log results to Obsidian."],
+        args=[agent, "design_batch", DESIGN_BATCH_PROMPT],
         id="design_batch",
     )
 
