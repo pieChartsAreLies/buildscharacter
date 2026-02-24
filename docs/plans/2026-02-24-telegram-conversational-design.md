@@ -94,7 +94,15 @@ Directives from the boss. Read these before every interaction.
 ## Lessons Learned
 ```
 
-**Mechanism:** System prompt instructs Hobson: "When the user gives feedback, a correction, or a standing instruction, append it to Standing Orders using `append_to_note`. Before making decisions, check Standing Orders first."
+**Mechanism:** System prompt instructs Hobson: "When the user gives feedback, a correction, or a standing instruction, propose it as a standing order before writing it. Before making decisions, check Standing Orders first."
+
+**Confirmation Step (from Gemini adversarial review):** When Hobson detects feedback or a directive, he does NOT write directly to Standing Orders. Instead:
+1. Hobson proposes the standing order text and category (Feedback, Preferences, or Lessons Learned)
+2. Sends a Telegram message: "I'd like to add this to my Standing Orders under [category]: '[proposed text]'" with Confirm/Skip inline buttons
+3. Only after the user clicks Confirm does Hobson call `append_to_note` to write it
+4. If the user clicks Skip, Hobson acknowledges and moves on
+
+This prevents bad captures, paraphrasing errors, and conversational cruft from polluting the Standing Orders file. The user always sees exactly what Hobson is learning.
 
 Standing orders content loaded into conversation prompt at every invocation (both Telegram conversations and scheduled workflows). Learnings carry forward everywhere.
 
