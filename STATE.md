@@ -91,7 +91,6 @@ All 10 phases complete plus Telegram conversational capability. Hobson service r
 ## Next Steps
 
 1. Monitor first full week of scheduled workflows, tune prompts
-2. Test Telegram conversation and standing order flow end-to-end
-3. Set up Cloudflare tunnel for Grafana public dashboard
-4. Seed content calendar with blog post ideas
-5. Create first merch designs for Printful
+2. Set up Cloudflare tunnel for Grafana public dashboard
+3. Seed content calendar with blog post ideas
+4. Create first merch designs for Printful
