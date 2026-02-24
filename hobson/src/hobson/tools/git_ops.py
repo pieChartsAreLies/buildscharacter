@@ -5,6 +5,7 @@ Hobson creates branches, commits blog posts, and opens PRs for human review.
 """
 
 import base64
+import re
 from datetime import date
 
 import httpx
@@ -145,3 +146,109 @@ def list_open_blog_prs() -> str:
     for pr in blog_prs:
         lines.append(f"- PR #{pr['number']}: {pr['title']} ({pr['html_url']})")
     return "\n".join(lines)
+
+
+_SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+
+def _validate_blog_post(
+    slug: str,
+    title: str,
+    description: str,
+    content: str,
+    tags: str,
+) -> list[str]:
+    """Validate blog post fields before publishing.
+
+    Returns a list of error strings. An empty list means valid.
+    """
+    errors: list[str] = []
+
+    if not _SLUG_RE.match(slug):
+        errors.append(
+            f"Slug '{slug}' is not URL-safe "
+            "(must match ^[a-z0-9]+(?:-[a-z0-9]+)*$)"
+        )
+
+    if not title.strip():
+        errors.append("Title is empty")
+
+    if not description.strip():
+        errors.append("Description is empty")
+
+    if not tags.strip():
+        errors.append("Tags is empty")
+
+    word_count = len(content.split())
+    if word_count < 250:
+        errors.append(
+            f"Content body has {word_count} words (minimum 250 required)"
+        )
+
+    return errors
+
+
+@tool
+def publish_blog_post(
+    slug: str,
+    title: str,
+    description: str,
+    content: str,
+    tags: str,
+    pub_date: str = "",
+) -> str:
+    """Publish a blog post directly to master (no PR).
+
+    Runs pre-flight validation checks before committing. Use this for
+    posts that have already been reviewed or don't need a PR gate.
+
+    Args:
+        slug: URL-friendly post slug (e.g., 'rain-on-day-three')
+        title: Post title
+        description: Post meta description (1-2 sentences)
+        content: Full markdown body of the post (without frontmatter)
+        tags: Comma-separated tags (e.g., 'outdoor, humor, camping')
+        pub_date: Publication date as YYYY-MM-DD (defaults to today)
+    """
+    errors = _validate_blog_post(slug, title, description, content, tags)
+    if errors:
+        bullet_list = "\n".join(f"- {e}" for e in errors)
+        return f"PUBLISH BLOCKED - pre-flight checks failed:\n{bullet_list}"
+
+    pub_date = pub_date or date.today().isoformat()
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+    tags_yaml = ", ".join(tag_list)
+
+    file_content = f"""---
+title: "{title}"
+description: "{description}"
+pubDate: {pub_date}
+author: Hobson
+tags: [{tags_yaml}]
+---
+
+{content}
+"""
+
+    file_path = f"site/src/data/blog/{slug}.md"
+
+    with httpx.Client(headers=_headers(), timeout=30) as client:
+        # 1. Get the latest commit SHA on master
+        resp = client.get(_repo_url("git/ref/heads/master"))
+        resp.raise_for_status()
+        master_sha = resp.json()["object"]["sha"]
+
+        # 2. Commit the blog post file directly to master
+        encoded = base64.b64encode(file_content.encode()).decode()
+        resp = client.put(
+            _repo_url(f"contents/{file_path}"),
+            json={
+                "message": f"feat: add blog post '{title}'",
+                "content": encoded,
+                "branch": "master",
+            },
+        )
+        resp.raise_for_status()
+        commit_url = resp.json()["commit"]["html_url"]
+
+    return f"Published to master: {commit_url}"
