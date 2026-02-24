@@ -73,13 +73,23 @@ Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggr
   - [x] Design batch bootstrap variant (create Printful drafts, skip approval)
   - [x] Threshold checking (10+ posts AND 15+ products triggers Telegram notification to switch)
   - [x] Content calendar expanded to 22 topics (listicles, gear, humor, meta/transparency)
+- [x] Image Generation Integration (2026-02-24)
+  - [x] Gemini Imagen 4.0 (`imagen-4.0-generate-001`) via google-genai SDK
+  - [x] 4 candidates per concept, Gemini Flash vision ranking for best selection
+  - [x] Cloudflare R2 storage (bucket: hobson-designs, UUID-prefixed filenames)
+  - [x] PostgreSQL `hobson.design_generations` table (provenance tracking)
+  - [x] Auto-upload to R2 during generation (avoids base64 context window bloat)
+  - [x] generate_design_image + upload_to_r2 tools registered in agent
+  - [x] Design batch workflow updated with structured prompt template
+  - [x] First successful end-to-end run: 5 concepts, 3 images, 3 Printful products created
 
 ## Infrastructure
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (BOOTSTRAP_MODE, 8 jobs, 22 tools) |
-| PostgreSQL schema | CT 201, Freya, hobson schema | Applied (10 tables + checkpointer) |
+| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (BOOTSTRAP_MODE, 8 jobs, 24 tools) |
+| PostgreSQL schema | CT 201, Freya, hobson schema | Applied (11 tables + checkpointer) |
+| Cloudflare R2 | hobson-designs bucket | Active (3 designs uploaded) |
 | Obsidian vault | 98 - Hobson Builds Character/ | Created (19+ files) |
 | Grafana | CT 180, 192.168.2.180:3000 | Dashboard live (9 panels, anon access) |
 | Uptime Kuma | CT 182, 192.168.2.182:3001 | 6 monitors (5 push + 1 HTTP) |
@@ -96,6 +106,9 @@ Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggr
 - Google API key passed explicitly to ChatGoogleGenerativeAI
 - Grafana admin password was reset to temppass123 during setup; change it back and update Bitwarden
 - Grafana dashboard is local-only (192.168.2.180); needs Cloudflare tunnel for public access on buildscharacter.com/dashboard
+- Imagen outputs 1024x1024; below Printful minimum for stickers (1500x1500). Fine for mugs/pins. May need upscaling later.
+- Vision ranking occasionally falls back to first image on API errors (non-blocking)
+- Previous design_generations records (IDs 1-2) have no image_url from early test runs
 
 ## Next Steps
 
@@ -104,3 +117,4 @@ Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggr
 3. Watch for threshold notification (10+ posts AND 15+ products), then set BOOTSTRAP_MODE=false and restart
 4. Promote on Reddit/HN once content inventory is built
 5. Restore Grafana admin password and update Bitwarden
+6. Consider image upscaling for sticker-size products (1024->1500+)
