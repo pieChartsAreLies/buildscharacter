@@ -193,14 +193,14 @@ async def _handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             url = f"https://{settings.obsidian_host}:{settings.obsidian_port}/vault/{quote(STANDING_ORDERS_PATH)}"
             headers = {
                 "Authorization": f"Bearer {settings.obsidian_api_key}",
-                "Content-Type": "application/json",
+                "Content-Type": "text/markdown",
             }
-            # I2: Error handling around Obsidian PATCH
+            # I2: Error handling around Obsidian POST (append)
             try:
                 async with httpx.AsyncClient(timeout=10, verify=False) as client:
-                    resp = await client.patch(
+                    resp = await client.post(
                         url,
-                        json={"content": f"\n- {proposed_text}", "operation": "append"},
+                        content=f"\n- {proposed_text}",
                         headers=headers,
                     )
                     resp.raise_for_status()

@@ -51,10 +51,10 @@ def append_to_note(path: str, content: str) -> str:
         content: Markdown content to append
     """
     with _client() as client:
-        resp = client.patch(
+        resp = client.post(
             f"/vault/{path}",
-            json={"content": content, "operation": "append"},
-            headers={"Content-Type": "application/json"},
+            content=content,
+            headers={"Content-Type": "text/markdown"},
         )
         resp.raise_for_status()
     return f"Appended to note: {path}"
@@ -81,10 +81,10 @@ def append_to_daily_log(entry: str) -> str:
         else:
             addition = f"- {entry}\n"
 
-        resp = client.patch(
+        resp = client.post(
             f"/vault/{log_path}",
-            json={"content": addition, "operation": "append"},
-            headers={"Content-Type": "application/json"},
+            content=addition,
+            headers={"Content-Type": "text/markdown"},
         )
         resp.raise_for_status()
     return f"Logged to daily log: {entry}"
