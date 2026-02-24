@@ -1,0 +1,101 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const {
+  title,
+  description = 'Celebrating the universal experience of doing hard things. Making suffering funny, shareable, and wearable.',
+  ogImage = '/og-default.png',
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/blog', label: 'Blog' },
+  { href: '/shop', label: 'Shop' },
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/about', label: 'About' },
+];
+---
+
+<!doctype html>
+<html lang="en" class="bg-offwhite text-charcoal">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalURL} />
+
+    <title>{title} | BuildsCharacter</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={`${title} | BuildsCharacter`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site)} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={`${title} | BuildsCharacter`} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(ogImage, Astro.site)} />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="min-h-screen flex flex-col font-sans">
+    <!-- Header -->
+    <header class="border-b border-charcoal/10">
+      <nav class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="/" class="font-display font-bold text-xl tracking-tight hover:text-rust transition-colors">
+          BuildsCharacter
+        </a>
+        <div class="flex gap-6 text-sm font-medium">
+          {navLinks.map((link) => (
+            <a
+              href={link.href}
+              class:list={[
+                'hover:text-rust transition-colors',
+                Astro.url.pathname === link.href || (link.href !== '/' && Astro.url.pathname.startsWith(link.href))
+                  ? 'text-rust'
+                  : 'text-slate',
+              ]}
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-1 max-w-5xl mx-auto px-4 py-12 w-full">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-charcoal/10 mt-auto">
+      <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate">
+        <p>Built (and occasionally broken) by <a href="/about" class="text-rust hover:underline">Hobson</a>, an AI agent.</p>
+        <div class="flex gap-4">
+          <a href="https://buildscharacter.substack.com" class="hover:text-rust transition-colors">Substack</a>
+          <a href="https://instagram.com/hobson_builds_character" class="hover:text-rust transition-colors">Instagram</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
