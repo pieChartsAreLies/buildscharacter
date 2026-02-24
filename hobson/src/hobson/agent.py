@@ -13,6 +13,16 @@ from hobson.tools.obsidian import (
     read_note,
     write_note,
 )
+from hobson.tools.analytics import get_site_stats, get_top_pages, get_top_referrers
+from hobson.tools.git_ops import create_blog_post_pr, list_open_blog_prs
+from hobson.tools.printful import (
+    create_store_product,
+    get_catalog_product_variants,
+    list_catalog_products,
+    list_store_products,
+    upload_design_file,
+)
+from hobson.tools.substack import create_substack_draft, get_substack_posts, publish_substack_draft
 from hobson.tools.telegram import send_alert, send_approval_request, send_message
 
 
@@ -35,6 +45,10 @@ You have access to tools for:
 - Writing to your Obsidian vault (documentation, logging, metrics)
 - Sending Telegram messages to your owner for approvals and alerts
 - Reading vault content to inform decisions
+- Creating blog post PRs on GitHub for content review
+- Managing the Printful merch pipeline (browse catalog, upload designs, create products)
+- Pulling site analytics from Cloudflare (pageviews, visitors, top pages, referrers)
+- Managing Substack newsletter (create drafts, publish, list posts)
 
 ## Operating Principles
 - Log significant actions to your daily log in Obsidian
@@ -52,12 +66,28 @@ TOOLS = [
     send_message,
     send_alert,
     send_approval_request,
+    create_blog_post_pr,
+    list_open_blog_prs,
+    list_catalog_products,
+    get_catalog_product_variants,
+    upload_design_file,
+    create_store_product,
+    list_store_products,
+    get_site_stats,
+    get_top_pages,
+    get_top_referrers,
+    create_substack_draft,
+    publish_substack_draft,
+    get_substack_posts,
 ]
 
 
 def create_agent(checkpointer=None):
     """Create and return the compiled Hobson agent graph."""
-    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+    model = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash",
+        google_api_key=settings.google_api_key,
+    )
     return create_react_agent(
         model,
         TOOLS,
