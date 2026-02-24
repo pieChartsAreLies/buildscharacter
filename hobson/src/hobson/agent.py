@@ -15,6 +15,7 @@ from hobson.tools.obsidian import (
 )
 from hobson.tools.analytics import get_site_stats, get_top_pages, get_top_referrers
 from hobson.tools.git_ops import create_blog_post_pr, list_open_blog_prs, publish_blog_post
+from hobson.tools.image_gen import generate_design_image, upload_to_r2
 from hobson.tools.printful import (
     create_store_product,
     get_catalog_product_variants,
@@ -81,6 +82,8 @@ _COMMON_TOOLS = [
     upload_design_file,
     create_store_product,
     list_store_products,
+    generate_design_image,
+    upload_to_r2,
     get_site_stats,
     get_top_pages,
     get_top_referrers,
