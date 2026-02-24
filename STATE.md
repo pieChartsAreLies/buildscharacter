@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-Phase 1 and Phase 3 (core agent) complete. Hobson service running on CT 255. Ready for Phase 2 (website) and Phase 4+ (content/merch/analytics workflows).
+Phases 1, 2 (site scaffold), and 3 (core agent) complete. Hobson service running on CT 255 with Gemini 2.5 Flash. Code merged to master and pushed to GitHub. Cloudflare Pages deployment pending (manual dashboard setup).
 
 ## Status
 
@@ -19,44 +19,51 @@ Phase 1 and Phase 3 (core agent) complete. Hobson service running on CT 255. Rea
   - [x] PostgreSQL schema applied (8 tables + checkpointer tables, hobson schema on CT 201)
   - [x] LXC container provisioned (CT 255 on Loki, 192.168.2.232, Python 3.11)
   - [x] Obsidian vault created (98 - Hobson Builds Character/, 19 files)
-- [ ] Phase 2: Site built and deployed
+- [x] Phase 2: Site built (deployment pending Cloudflare Pages setup)
+  - [x] Astro 5 site scaffolded with Tailwind v4, sitemap
+  - [x] 6 pages: home, blog, shop (placeholder), dashboard (placeholder), about
+  - [x] Content collections (blog) with hello-world sample post
+  - [x] Build verified (all pages compile cleanly)
+  - [x] Code pushed to GitHub (pieChartsAreLies/buildscharacter)
+  - [x] PR #1 merged to master
+  - [ ] Cloudflare Pages connected (manual dashboard step)
+  - [ ] Custom domain configured (buildscharacter.com)
 - [x] Phase 3: Core agent built and running
   - [x] Database client (db.py) with run logging, cost tracking, metrics
   - [x] Obsidian API tool (5 functions: write, read, append, daily log, list)
   - [x] Telegram bot integration (send message, alert, approval request)
-  - [x] LangGraph agent (create_react_agent with Claude Sonnet, 8 tools)
+  - [x] LangGraph agent (create_react_agent with Gemini 2.5 Flash, 8 tools)
   - [x] Health endpoint (FastAPI /health on :8080)
   - [x] Scheduler (APScheduler with 5 cron workflows, circuit breaking)
   - [x] Main entry point (checkpointer + agent + scheduler + health)
   - [x] Systemd service (enabled, running, auto-restart)
   - [x] DB integration test passed (run log, decisions, costs, metrics)
   - [x] Health endpoint verified: {"status":"ok","agent":"hobson","version":"0.1.0"}
+  - [x] Telegram test message sent to Hobson's Folly group
 - [ ] Substack launched
 
 ## Infrastructure
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (systemd) |
+| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (systemd, Gemini 2.5 Flash) |
 | PostgreSQL schema | CT 201, Freya, hobson schema | Applied (8 tables + checkpointer) |
-| Obsidian vault | 98 - Hobson Builds Character/ | Created |
+| Obsidian vault | 98 - Hobson Builds Character/ | Created (19 files) |
 | Ollama | CT 205, 192.168.2.71:11434 | Verified reachable |
 | Grafana | CT 180, 192.168.2.180:3000 | Existing, dashboard TBD |
 | Uptime Kuma | CT 182 | Existing, monitors TBD |
+| GitHub repo | pieChartsAreLies/buildscharacter | Code pushed, PR #1 merged |
+| Cloudflare Pages | buildscharacter.com | Pending setup |
 
 ## Known Issues
 
-- Overseerr Cloudflare tunnel currently on buildscharacter.com; needs to move to subdomain before site goes live
-- Claude Max quota shared with Bob and Tim; monitor for rate limiting
 - Substack has no public API; python-substack (reverse-engineered) is fragile
-- Telegram chat ID not yet configured (need to create group and get ID)
-- No ANTHROPIC_API_KEY in .env yet; agent will fail on Claude calls until configured
-- Obsidian API key not yet in .env; Obsidian tools will fail until configured
+- Overseerr tunnel is on loki.buildscharacter.com (no conflict with root domain)
 
 ## Next Steps
 
-1. Phase 2: Build the Astro website (Tasks 6-7 in plan)
+1. Connect Cloudflare Pages to GitHub repo (manual dashboard step)
 2. Phase 4: Content pipeline (Tasks 15-16 in plan)
 3. Phase 5: Merch pipeline (Tasks 17-18 in plan)
-4. Configure remaining API keys in .env (Anthropic, Obsidian, Telegram chat ID)
-5. Set up Uptime Kuma monitors for Hobson
+4. Set up Uptime Kuma monitors for Hobson
+5. Set up Grafana dashboard (Phase 8)
