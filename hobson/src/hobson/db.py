@@ -167,3 +167,10 @@ class HobsonDB:
                 (request_id,),
             ).fetchone()
             return row["status"] if row else None
+
+    def get_approval_record(self, request_id: str) -> dict | None:
+        with self._conn() as conn:
+            return conn.execute(
+                "SELECT * FROM hobson.approvals WHERE request_id = %s",
+                (request_id,),
+            ).fetchone()

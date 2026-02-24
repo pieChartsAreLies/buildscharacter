@@ -5,6 +5,8 @@ import traceback
 import uuid
 from typing import Optional
 
+import httpx
+import telegram.error
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     Application,
@@ -58,8 +60,6 @@ def _format_history(messages: list[dict]) -> str:
 
 async def _load_standing_orders() -> str:
     """Load standing orders from Obsidian (async-safe via httpx)."""
-    import httpx
-
     url = f"http://{settings.obsidian_host}:{settings.obsidian_port}/vault/{STANDING_ORDERS_PATH}"
     headers = {
         "Authorization": f"Bearer {settings.obsidian_api_key}",
@@ -81,6 +81,12 @@ async def _handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     chat_id = str(update.message.chat_id)
+
+    # S2: Authorize chat_id
+    if chat_id != settings.telegram_chat_id:
+        logger.warning(f"Ignoring message from unauthorized chat {chat_id}")
+        return
+
     sender = update.message.from_user
     sender_name = sender.first_name or sender.username or "Unknown"
     text = update.message.text
@@ -122,7 +128,12 @@ async def _handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Store and send response
         _db.store_message(chat_id, "Hobson", response_text, is_from_hobson=True)
-        await update.message.reply_text(response_text, parse_mode="Markdown")
+
+        # S4: Markdown fallback on BadRequest
+        try:
+            await update.message.reply_text(response_text, parse_mode="Markdown")
+        except telegram.error.BadRequest:
+            await update.message.reply_text(response_text)
 
         # Log the conversation turn
         logger.info(f"Telegram conversation: {sender_name} -> Hobson in chat {chat_id}")
@@ -145,8 +156,6 @@ def _extract_response(result) -> str:
     for msg in reversed(messages):
         if hasattr(msg, "content") and isinstance(msg.content, str) and msg.content.strip():
             if not hasattr(msg, "tool_calls") or not msg.tool_calls:
-                return msg.content
-            if msg.content.strip():
                 return msg.content
     return "(No response generated)"
 
@@ -175,15 +184,8 @@ async def _handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif action == "confirm_order":
         # Standing order confirmed -- write to Obsidian
-        import httpx
-        from psycopg.rows import dict_row
-        import psycopg
-
-        with psycopg.connect(_db.database_url, row_factory=dict_row) as conn:
-            record = conn.execute(
-                "SELECT action FROM hobson.approvals WHERE request_id = %s",
-                (request_id,),
-            ).fetchone()
+        # I1: Use HobsonDB method instead of raw psycopg connection
+        record = _db.get_approval_record(request_id)
 
         if record:
             proposed_text = record["action"]
@@ -192,12 +194,22 @@ async def _handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "Authorization": f"Bearer {settings.obsidian_api_key}",
                 "Content-Type": "application/json",
             }
-            async with httpx.AsyncClient(timeout=10) as client:
-                await client.patch(
-                    url,
-                    json={"content": f"\n- {proposed_text}", "operation": "append"},
-                    headers=headers,
+            # I2: Error handling around Obsidian PATCH
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    resp = await client.patch(
+                        url,
+                        json={"content": f"\n- {proposed_text}", "operation": "append"},
+                        headers=headers,
+                    )
+                    resp.raise_for_status()
+            except Exception as e:
+                logger.error(f"Failed to write standing order to Obsidian: {e}")
+                await query.edit_message_text(
+                    text=f"{query.message.text}\n\nFailed to save -- Obsidian API may be down.",
+                    parse_mode="Markdown",
                 )
+                return
 
             _db.resolve_approval(request_id, True)
             await query.edit_message_text(
@@ -217,26 +229,23 @@ async def _handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # -- Agent tools (used by LangGraph during workflows and conversation) --
 
 @tool
-def send_message(text: str) -> str:
+async def send_message(text: str) -> str:
     """Send a message to the Hobson Telegram group.
 
     Args:
         text: Message text (supports Telegram markdown)
     """
-    import asyncio
     bot = Bot(token=settings.telegram_bot_token)
-    asyncio.get_event_loop().run_until_complete(
-        bot.send_message(
-            chat_id=settings.telegram_chat_id,
-            text=text,
-            parse_mode="Markdown",
-        )
+    await bot.send_message(
+        chat_id=settings.telegram_chat_id,
+        text=text,
+        parse_mode="Markdown",
     )
     return "Message sent to Telegram"
 
 
 @tool
-def send_alert(title: str, details: str) -> str:
+async def send_alert(title: str, details: str) -> str:
     """Send an alert notification to the Hobson Telegram group.
 
     Args:
@@ -244,20 +253,17 @@ def send_alert(title: str, details: str) -> str:
         details: Alert details
     """
     text = f"*{title}*\n\n{details}"
-    import asyncio
     bot = Bot(token=settings.telegram_bot_token)
-    asyncio.get_event_loop().run_until_complete(
-        bot.send_message(
-            chat_id=settings.telegram_chat_id,
-            text=text,
-            parse_mode="Markdown",
-        )
+    await bot.send_message(
+        chat_id=settings.telegram_chat_id,
+        text=text,
+        parse_mode="Markdown",
     )
     return f"Alert sent: {title}"
 
 
 @tool
-def send_approval_request(action: str, reasoning: str, estimated_cost: float = 0.0) -> str:
+async def send_approval_request(action: str, reasoning: str, estimated_cost: float = 0.0) -> str:
     """Send an approval request with Approve/Deny buttons.
 
     Args:
@@ -265,7 +271,7 @@ def send_approval_request(action: str, reasoning: str, estimated_cost: float = 0
         reasoning: Why this action is recommended
         estimated_cost: Estimated cost in USD (0.0 if free)
     """
-    request_id = str(uuid.uuid4())[:8]
+    request_id = uuid.uuid4().hex[:12]
 
     if _db:
         _db.create_approval(request_id, action, reasoning, estimated_cost)
@@ -280,28 +286,25 @@ def send_approval_request(action: str, reasoning: str, estimated_cost: float = 0
         ]
     ])
 
-    import asyncio
     bot = Bot(token=settings.telegram_bot_token)
-    asyncio.get_event_loop().run_until_complete(
-        bot.send_message(
-            chat_id=settings.telegram_chat_id,
-            text=text,
-            parse_mode="Markdown",
-            reply_markup=keyboard,
-        )
+    await bot.send_message(
+        chat_id=settings.telegram_chat_id,
+        text=text,
+        parse_mode="Markdown",
+        reply_markup=keyboard,
     )
     return f"Approval request sent (ID: {request_id}). Waiting for response."
 
 
 @tool
-def send_standing_order_proposal(category: str, proposed_text: str) -> str:
+async def send_standing_order_proposal(category: str, proposed_text: str) -> str:
     """Propose a new standing order for confirmation. Use when the user gives feedback or instructions.
 
     Args:
         category: One of 'Feedback', 'Preferences', or 'Lessons Learned'
         proposed_text: The concise directive to add to Standing Orders
     """
-    request_id = str(uuid.uuid4())[:8]
+    request_id = uuid.uuid4().hex[:12]
 
     if _db:
         _db.create_approval(request_id, proposed_text, f"Standing order: {category}", 0)
@@ -319,14 +322,11 @@ def send_standing_order_proposal(category: str, proposed_text: str) -> str:
         ]
     ])
 
-    import asyncio
     bot = Bot(token=settings.telegram_bot_token)
-    asyncio.get_event_loop().run_until_complete(
-        bot.send_message(
-            chat_id=settings.telegram_chat_id,
-            text=text,
-            parse_mode="Markdown",
-            reply_markup=keyboard,
-        )
+    await bot.send_message(
+        chat_id=settings.telegram_chat_id,
+        text=text,
+        parse_mode="Markdown",
+        reply_markup=keyboard,
     )
     return f"Standing order proposal sent (ID: {request_id}). Waiting for confirmation."
