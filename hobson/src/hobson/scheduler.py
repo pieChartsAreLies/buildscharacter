@@ -13,6 +13,7 @@ from hobson.workflows.business_review import BUSINESS_REVIEW_PROMPT
 from hobson.workflows.content_pipeline import CONTENT_PIPELINE_PROMPT
 from hobson.workflows.design_batch import DESIGN_BATCH_PROMPT
 from hobson.workflows.morning_briefing import MORNING_BRIEFING_PROMPT
+from hobson.workflows.substack_dispatch import SUBSTACK_DISPATCH_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ def setup_schedules(agent):
     scheduler.add_job(
         run_workflow,
         CronTrigger(day_of_week="fri", hour=15, timezone="America/New_York"),
-        args=[agent, "substack_dispatch", "Write this week's Substack edition: review the daily logs, compile metrics, write in Hobson's voice, include a reader poll."],
+        args=[agent, "substack_dispatch", SUBSTACK_DISPATCH_PROMPT],
         id="substack_dispatch",
     )
 

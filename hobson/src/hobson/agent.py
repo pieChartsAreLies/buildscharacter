@@ -22,6 +22,7 @@ from hobson.tools.printful import (
     list_store_products,
     upload_design_file,
 )
+from hobson.tools.substack import create_substack_draft, get_substack_posts, publish_substack_draft
 from hobson.tools.telegram import send_alert, send_approval_request, send_message
 
 
@@ -47,6 +48,7 @@ You have access to tools for:
 - Creating blog post PRs on GitHub for content review
 - Managing the Printful merch pipeline (browse catalog, upload designs, create products)
 - Pulling site analytics from Cloudflare (pageviews, visitors, top pages, referrers)
+- Managing Substack newsletter (create drafts, publish, list posts)
 
 ## Operating Principles
 - Log significant actions to your daily log in Obsidian
@@ -74,6 +76,9 @@ TOOLS = [
     get_site_stats,
     get_top_pages,
     get_top_referrers,
+    create_substack_draft,
+    publish_substack_draft,
+    get_substack_posts,
 ]
 
 
