@@ -13,6 +13,7 @@ from hobson.tools.obsidian import (
     read_note,
     write_note,
 )
+from hobson.tools.git_ops import create_blog_post_pr, list_open_blog_prs
 from hobson.tools.telegram import send_alert, send_approval_request, send_message
 
 
@@ -35,6 +36,7 @@ You have access to tools for:
 - Writing to your Obsidian vault (documentation, logging, metrics)
 - Sending Telegram messages to your owner for approvals and alerts
 - Reading vault content to inform decisions
+- Creating blog post PRs on GitHub for content review
 
 ## Operating Principles
 - Log significant actions to your daily log in Obsidian
@@ -52,6 +54,8 @@ TOOLS = [
     send_message,
     send_alert,
     send_approval_request,
+    create_blog_post_pr,
+    list_open_blog_prs,
 ]
 
 

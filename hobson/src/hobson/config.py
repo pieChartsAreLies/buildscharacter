@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     # Substack
     substack_cookies: str = ""
 
+    # GitHub (for PR-based content workflow)
+    github_token: str = ""  # Personal access token with repo scope
+    github_repo: str = "pieChartsAreLies/buildscharacter"  # owner/repo
+
     # Uptime Kuma
     uptime_kuma_push_url: str = ""
 

@@ -9,6 +9,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from hobson.config import settings
 from hobson.db import HobsonDB
+from hobson.workflows.content_pipeline import CONTENT_PIPELINE_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,7 @@ def setup_schedules(agent):
     scheduler.add_job(
         run_workflow,
         CronTrigger(day_of_week="mon,wed,fri", hour=10, timezone="America/New_York"),
-        args=[agent, "content_pipeline", "Run the content pipeline: read the content calendar, pick the next topic, generate a blog post draft, log it to Obsidian."],
+        args=[agent, "content_pipeline", CONTENT_PIPELINE_PROMPT],
         id="content_pipeline",
     )
 
