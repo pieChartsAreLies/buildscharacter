@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-All 10 phases complete plus Telegram conversational capability. Hobson service running on CT 255 with Gemini 2.5 Flash (22 tools, 5 scheduled workflows, bidirectional Telegram). Site live on buildscharacter.com. First week of autonomous operation starting.
+Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggressive content cadence (3x/day content, daily designs, daily bootstrap diary). Goal: 10+ blog posts and 15+ Printful products before promoting on Reddit/HN.
 
 ## Status
 
@@ -64,12 +64,21 @@ All 10 phases complete plus Telegram conversational capability. Hobson service r
   - [x] Health endpoint: OK
   - [x] Scheduler: 5 jobs started
   - [x] All 21 tools verified loading
+- [x] Bootstrap Sprint activated (2026-02-24)
+  - [x] BOOTSTRAP_MODE=true in .env, service restarted
+  - [x] Scheduler: 8 jobs (3x content, daily diary, daily designs, morning briefing, Substack, business review)
+  - [x] publish_blog_post tool with pre-flight validation (slug, title, desc, tags, 250-word min)
+  - [x] Code-level tool selection (bootstrap gets publish_blog_post, steady-state gets create_blog_post_pr)
+  - [x] Bootstrap diary workflow (daily 9pm ET, operational summary as blog content)
+  - [x] Design batch bootstrap variant (create Printful drafts, skip approval)
+  - [x] Threshold checking (10+ posts AND 15+ products triggers Telegram notification to switch)
+  - [x] Content calendar expanded to 22 topics (listicles, gear, humor, meta/transparency)
 
 ## Infrastructure
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (systemd, 22 tools, Telegram polling) |
+| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (BOOTSTRAP_MODE, 8 jobs, 22 tools) |
 | PostgreSQL schema | CT 201, Freya, hobson schema | Applied (10 tables + checkpointer) |
 | Obsidian vault | 98 - Hobson Builds Character/ | Created (19+ files) |
 | Grafana | CT 180, 192.168.2.180:3000 | Dashboard live (9 panels, anon access) |
@@ -90,7 +99,8 @@ All 10 phases complete plus Telegram conversational capability. Hobson service r
 
 ## Next Steps
 
-1. Monitor first full week of scheduled workflows, tune prompts
+1. Monitor bootstrap sprint execution (first content pipeline run at next scheduled time)
 2. Set up Cloudflare tunnel for Grafana public dashboard
-3. Seed content calendar with blog post ideas
-4. Create first merch designs for Printful
+3. Watch for threshold notification (10+ posts AND 15+ products), then set BOOTSTRAP_MODE=false and restart
+4. Promote on Reddit/HN once content inventory is built
+5. Restore Grafana admin password and update Bitwarden
