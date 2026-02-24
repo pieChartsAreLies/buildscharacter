@@ -174,3 +174,34 @@ class HobsonDB:
                 "SELECT * FROM hobson.approvals WHERE request_id = %s",
                 (request_id,),
             ).fetchone()
+
+    # -- Design generations --
+
+    def log_design_generation(
+        self,
+        concept_name: str,
+        generation_prompt: str,
+        model_version: str = "imagen-4.0-generate-001",
+        image_url: str | None = None,
+        r2_filename: str | None = None,
+        product_type: str | None = None,
+        generation_status: str = "success",
+        status_reason: str | None = None,
+        image_width: int | None = None,
+        image_height: int | None = None,
+    ) -> int:
+        with self._conn() as conn:
+            row = conn.execute(
+                """INSERT INTO hobson.design_generations
+                   (concept_name, generation_prompt, model_version, image_url,
+                    r2_filename, product_type, generation_status, status_reason,
+                    image_width, image_height)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                   RETURNING id""",
+                (
+                    concept_name, generation_prompt, model_version, image_url,
+                    r2_filename, product_type, generation_status, status_reason,
+                    image_width, image_height,
+                ),
+            ).fetchone()
+            return row["id"]
