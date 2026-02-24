@@ -1,8 +1,9 @@
 """Design batch workflow: generate merch concepts and manage the Printful pipeline.
 
 This module provides the structured prompt for the weekly design batch workflow.
-When triggered by the scheduler (Monday 2pm ET), the agent ideates design concepts,
-logs them to Obsidian, and manages the Printful product pipeline.
+When triggered by the scheduler (Monday 2pm ET in steady-state, daily 2pm ET in bootstrap),
+the agent ideates design concepts, generates artwork via Imagen, and manages the
+Printful product pipeline.
 """
 
 DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
@@ -18,9 +19,13 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
 3. **Generate 5-10 new design concepts.** For each concept, define:
    - A name (short, punchy, brand-aligned)
    - A description (what the design looks like)
-   - Target product type (sticker, t-shirt, mug, hoodie, poster)
+   - Target product type (sticker, pin, small print, t-shirt, poster)
    - The text/copy on the design (if text-based)
    - Why it fits the brand
+
+   Prioritize low-cost, impulse-buy products (stickers, pins, small prints) during
+   early inventory building. Save premium items (hoodies, posters) for after you
+   have traffic data showing demand.
 
    Focus on the outdoor/endurance community. Think:
    - Stickers with dry one-liners about suffering outdoors
@@ -46,14 +51,37 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    - Production feasibility (simple designs are better for POD)
    - Market fit (does the target audience want this?)
 
-6. **Send approval request via Telegram.** Use send_approval_request to present
-   the top 3 concepts to the owner. Include the concept name, description, and
-   target product type for each.
+6. **Generate images for top 3.** For each of your top 3 concepts, write a
+   structured image generation prompt using this template:
 
-7. **Log to daily log.** Append to the daily log noting how many concepts were
-   generated, the top picks, and whether approval was requested.
+   - Subject: the core design idea
+   - Style: art style matching the brand (minimalist, bold, outdoor-inspired,
+     vintage national park poster, vector illustration, line art)
+   - Composition: layout for the target product (centered on transparent
+     background for stickers, isolated subject for pins, full design for prints)
+   - Color palette: from brand guidelines or concept-specific
+   - Product context: what product this will go on and its constraints
+   - Negative: things to exclude (no text unless the concept IS text-based,
+     no borders, no watermarks, no photorealistic faces)
 
-8. **Update design inventory in Obsidian.** Append a summary to
+   Assemble these fields into a single detailed prompt, then call
+   generate_design_image with the prompt, concept_name, product_type, and
+   appropriate aspect_ratio.
+
+   The result is JSON with generation_id and image_base64. Pass the
+   image_base64, concept_name, and generation_id to upload_to_r2 to get
+   a public URL.
+
+7. **Send approval request via Telegram.** Use send_approval_request to present
+   the top 3 concepts to the owner. Include the concept name, description,
+   target product type, and R2 image URL (from upload_to_r2 result) for each
+   so the owner can see the designs before approving.
+
+8. **Log to daily log.** Append to the daily log noting how many concepts were
+   generated, the top picks, image generation results, and whether approval
+   was requested.
+
+9. **Update design inventory in Obsidian.** Append a summary to
    '98 - Hobson Builds Character/Content/Designs/Concepts/' listing all new
    concepts with their status.
 
@@ -64,13 +92,15 @@ The goal is volume and iteration, not perfection.
 """
 
 DESIGN_BATCH_BOOTSTRAP_PROMPT = DESIGN_BATCH_PROMPT.replace(
-    "6. **Send approval request via Telegram.** Use send_approval_request to present\n"
-    "   the top 3 concepts to the owner. Include the concept name, description, and\n"
-    "   target product type for each.",
-    "6. **Create products on Printful.** For your top 3 ranked concepts, use\n"
-    "   create_store_product to create each one. Note: products may go live\n"
-    "   immediately, so only push concepts you are confident in.\n"
+    "7. **Send approval request via Telegram.** Use send_approval_request to present\n"
+    "   the top 3 concepts to the owner. Include the concept name, description,\n"
+    "   target product type, and R2 image URL (from upload_to_r2 result) for each\n"
+    "   so the owner can see the designs before approving.",
+    "7. **Create products on Printful.** For your top 3 ranked concepts, use\n"
+    "   upload_design_file with the R2 image URL, then create_store_product to\n"
+    "   create each one. Note: products may go live immediately, so only push\n"
+    "   concepts you are confident in.\n"
     "\n"
-    "   Then notify via Telegram with the product names and a note that the\n"
-    "   owner should review them on Printful.",
+    "   Then notify via Telegram with the product names, image URLs, and a note\n"
+    "   that the owner should review them on Printful.",
 )
