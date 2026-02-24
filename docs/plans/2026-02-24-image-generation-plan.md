@@ -4,7 +4,7 @@
 
 **Goal:** Add Gemini Imagen image generation to Hobson's design batch workflow so he produces actual artwork for merch products.
 
-**Architecture:** Two new LangGraph tools (`generate_design_image`, `upload_to_r2`) in a new `image_gen.py` module. `generate_design_image` generates 4 candidate images via Imagen 4.0, uses Gemini Flash vision to rank and select the best one, validates dimensions against product type requirements, and returns the image as base64. `upload_to_r2` uploads to Cloudflare R2 with UUID-prefixed filenames. A new PostgreSQL table `hobson.design_generations` tracks every generation attempt. The design batch workflow prompts are updated with a structured prompt template and product focus directive.
+**Architecture:** Two new LangGraph tools (`generate_design_image`, `upload_to_r2`) in a new `image_gen.py` module. `generate_design_image` generates 4 candidate images via Imagen 4.0, uses Gemini Flash vision to rank and select the best one, validates dimensions against product type requirements, logs to PostgreSQL, and returns a JSON string with `generation_id` + `image_base64`. `upload_to_r2` accepts the `generation_id` for a targeted DB update (no race conditions), uploads to Cloudflare R2 with UUID-prefixed filenames, and returns the public URL. A new PostgreSQL table `hobson.design_generations` tracks every generation attempt. The design batch workflow prompts are updated with a structured prompt template and product focus directive.
 
 **Tech Stack:** google-genai SDK (Imagen 4.0), boto3 (R2/S3), Pillow (dimension validation), PostgreSQL (provenance), LangGraph @tool decorator
 
@@ -116,11 +116,12 @@ git commit -m "feat: add R2 config fields for design image storage"
 
 **Step 1: Add google-genai and boto3**
 
-Add these two lines to the `dependencies` list (Pillow is already present as `pillow>=10`):
+Add these two lines to the `dependencies` list (Pillow is already present as `pillow>=10`).
+Use compatible release operators (`~=`) to prevent breaking changes on future deploys:
 
 ```
-    "google-genai>=1.0",
-    "boto3>=1.35",
+    "google-genai~=1.0",
+    "boto3~=1.35",
 ```
 
 The full dependencies block should look like:
@@ -140,8 +141,8 @@ dependencies = [
     "fastapi>=0.115",
     "python-substack>=0.1",
     "pillow>=10",
-    "google-genai>=1.0",
-    "boto3>=1.35",
+    "google-genai~=1.0",
+    "boto3~=1.35",
 ]
 ```
 
@@ -343,7 +344,7 @@ git commit -m "feat: add design generation tracking to DB and test helpers"
 
 ### Task 5: Implement generate_design_image tool
 
-This is the core tool. It generates 4 images via Imagen 4.0, uses Gemini Flash to pick the best one, validates dimensions, and returns the selected image.
+This is the core tool. It generates 4 images via Imagen 4.0, uses Gemini Flash to pick the best one, validates dimensions, logs to PostgreSQL (returning the row ID), and returns a JSON string with `generation_id` + `image_base64`. The `upload_to_r2` tool accepts `generation_id` for a targeted DB update, eliminating race conditions.
 
 **Files:**
 - Create: `hobson/src/hobson/tools/image_gen.py`
@@ -357,6 +358,7 @@ Create `hobson/src/hobson/tools/image_gen.py`:
 
 import base64
 import io
+import json
 import logging
 import re
 import time
@@ -364,11 +366,13 @@ import uuid
 
 import boto3
 from google import genai
+from google.api_core import exceptions as google_exceptions
 from google.genai import types
 from langchain_core.tools import tool
 from PIL import Image
 
 from hobson.config import settings
+from hobson.db import HobsonDB
 
 logger = logging.getLogger(__name__)
 
@@ -385,6 +389,9 @@ _MIN_DIMENSIONS = {
 
 _MODEL = "imagen-4.0-generate-001"
 _MAX_RETRIES = 3
+
+# Module-level DB instance (reused across tool calls)
+_db = HobsonDB(settings.database_url)
 
 
 def _sanitize_filename(concept_name: str) -> str:
@@ -441,13 +448,21 @@ def _rank_images_with_vision(
             model="gemini-2.5-flash",
             contents=parts,
         )
-        choice = int(response.text.strip()) - 1  # Convert 1-based to 0-based
+        # Robust parsing: extract first number from response
+        match = re.search(r"\d+", response.text)
+        if not match:
+            logger.warning("Vision ranker returned no number: %r, using 0", response.text)
+            return 0
+        choice = int(match.group()) - 1  # Convert 1-based to 0-based
         if 0 <= choice < len(images):
             return choice
         logger.warning("Vision ranker returned out-of-range index %d, using 0", choice)
         return 0
+    except (ValueError, AttributeError) as e:
+        logger.warning("Vision ranking parse error (%s), using first image", e)
+        return 0
     except Exception as e:
-        logger.warning("Vision ranking failed (%s), using first image", e)
+        logger.warning("Vision ranking API error (%s), using first image", e)
         return 0
 
 
@@ -461,7 +476,8 @@ async def generate_design_image(
     """Generate a design image using Gemini Imagen 4.0.
 
     Generates 4 candidate images, uses vision AI to select the best one,
-    and validates dimensions against product requirements.
+    and validates dimensions against product requirements. Returns a JSON
+    string with generation_id and image_base64 for use with upload_to_r2.
 
     Args:
         prompt: Detailed image generation prompt assembled from the structured template.
@@ -469,10 +485,6 @@ async def generate_design_image(
         product_type: Target product type for dimension validation (sticker, pin, poster, etc.).
         aspect_ratio: Image aspect ratio. One of "1:1", "3:4", "4:3", "9:16", "16:9".
     """
-    from hobson.db import HobsonDB
-
-    db = HobsonDB(settings.database_url)
-
     # Retry loop for transient API failures
     last_error = None
     for attempt in range(_MAX_RETRIES):
@@ -489,35 +501,70 @@ async def generate_design_image(
                 ),
             )
             break
-        except Exception as e:
+        except (
+            google_exceptions.ServiceUnavailable,
+            google_exceptions.TooManyRequests,
+            google_exceptions.InternalServerError,
+            ConnectionError,
+            TimeoutError,
+        ) as e:
             last_error = e
             if attempt < _MAX_RETRIES - 1:
                 wait = 2 ** attempt
-                logger.warning("Imagen API attempt %d failed (%s), retrying in %ds", attempt + 1, e, wait)
+                logger.warning(
+                    "Imagen API attempt %d failed (%s), retrying in %ds",
+                    attempt + 1, e, wait,
+                )
                 time.sleep(wait)
             continue
+        except (
+            google_exceptions.InvalidArgument,
+            google_exceptions.PermissionDenied,
+            google_exceptions.NotFound,
+        ) as e:
+            # Non-retryable errors: bad request, auth failure, wrong model
+            _db.log_design_generation(
+                concept_name=concept_name,
+                generation_prompt=prompt,
+                model_version=_MODEL,
+                product_type=product_type,
+                generation_status="failed",
+                status_reason=f"Non-retryable API error: {e}",
+            )
+            return json.dumps({
+                "status": "error",
+                "message": f"Image generation failed (non-retryable): {e}",
+            })
     else:
         # All retries exhausted
-        db.log_design_generation(
+        _db.log_design_generation(
             concept_name=concept_name,
             generation_prompt=prompt,
+            model_version=_MODEL,
             product_type=product_type,
             generation_status="failed",
             status_reason=f"API error after {_MAX_RETRIES} retries: {last_error}",
         )
-        return f"ERROR: Image generation failed after {_MAX_RETRIES} retries: {last_error}"
+        return json.dumps({
+            "status": "error",
+            "message": f"Image generation failed after {_MAX_RETRIES} retries: {last_error}",
+        })
 
     # Check for safety-filtered or empty response
     if not response.generated_images:
         reason = "No images returned (likely safety filter)"
-        db.log_design_generation(
+        _db.log_design_generation(
             concept_name=concept_name,
             generation_prompt=prompt,
+            model_version=_MODEL,
             product_type=product_type,
             generation_status="filtered",
             status_reason=reason,
         )
-        return f"ERROR: {reason}. Try modifying the prompt to avoid content filter triggers."
+        return json.dumps({
+            "status": "filtered",
+            "message": f"{reason}. Try modifying the prompt to avoid content filter triggers.",
+        })
 
     # Collect raw bytes from all candidates
     candidate_bytes = []
@@ -541,44 +588,47 @@ async def generate_design_image(
     # Encode as base64 for return
     image_b64 = base64.b64encode(selected_bytes).decode("utf-8")
 
-    # Log to DB
-    db.log_design_generation(
+    # Log to DB and get the generation_id for targeted upload_to_r2 update
+    generation_id = _db.log_design_generation(
         concept_name=concept_name,
         generation_prompt=prompt,
+        model_version=_MODEL,
         product_type=product_type,
         generation_status="success",
         image_width=width,
         image_height=height,
     )
 
-    result = (
-        f"Image generated successfully for '{concept_name}'.\n"
-        f"Dimensions: {width}x{height} px\n"
-        f"Selected image {best_idx + 1} of {len(candidate_bytes)} candidates.\n"
-        f"Model: {_MODEL}\n"
-    )
+    result = {
+        "status": "success",
+        "generation_id": generation_id,
+        "concept_name": concept_name,
+        "width": width,
+        "height": height,
+        "candidates": len(candidate_bytes),
+        "selected": best_idx + 1,
+        "model": _MODEL,
+        "image_base64": image_b64,
+    }
     if dim_warning:
-        result += f"WARNING: {dim_warning}\n"
-    result += f"BASE64:{image_b64}"
+        result["dimension_warning"] = dim_warning
 
-    return result
+    return json.dumps(result)
 
 
 @tool
 async def upload_to_r2(
     image_base64: str,
     concept_name: str,
+    generation_id: int = 0,
 ) -> str:
     """Upload a generated design image to Cloudflare R2 and return its public URL.
 
     Args:
-        image_base64: Base64-encoded PNG image bytes (from generate_design_image output after BASE64: prefix).
+        image_base64: Base64-encoded PNG image bytes (from generate_design_image output, the image_base64 field).
         concept_name: Human-readable concept name (used in filename after UUID prefix).
+        generation_id: Database row ID from generate_design_image output (for tracking). Pass 0 if unknown.
     """
-    # Strip the BASE64: prefix if present
-    if image_base64.startswith("BASE64:"):
-        image_base64 = image_base64[7:]
-
     image_bytes = base64.b64decode(image_base64)
     filename = _sanitize_filename(concept_name)
     r2_key = f"designs/{filename}"
@@ -600,23 +650,25 @@ async def upload_to_r2(
 
     public_url = f"{settings.r2_public_url}/{r2_key}"
 
-    # Update the most recent design_generations record with the URL
-    from hobson.db import HobsonDB
+    # Update the specific design_generations record with the URL (targeted by ID)
+    if generation_id:
+        try:
+            with _db._conn() as conn:
+                conn.execute(
+                    """UPDATE hobson.design_generations
+                       SET image_url = %s, r2_filename = %s
+                       WHERE id = %s""",
+                    (public_url, filename, generation_id),
+                )
+        except Exception as e:
+            logger.warning("Failed to update design_generations id=%d: %s", generation_id, e)
 
-    db = HobsonDB(settings.database_url)
-    try:
-        with db._conn() as conn:
-            conn.execute(
-                """UPDATE hobson.design_generations
-                   SET image_url = %s, r2_filename = %s
-                   WHERE concept_name = %s AND image_url IS NULL
-                   ORDER BY created_at DESC LIMIT 1""",
-                (public_url, filename, concept_name),
-            )
-    except Exception as e:
-        logger.warning("Failed to update design_generations with URL: %s", e)
-
-    return f"Uploaded to R2: {public_url}"
+    return json.dumps({
+        "status": "success",
+        "url": public_url,
+        "filename": filename,
+        "generation_id": generation_id,
+    })
 ```
 
 **Step 2: Verify the module imports cleanly**
@@ -768,13 +820,14 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    generate_design_image with the prompt, concept_name, product_type, and
    appropriate aspect_ratio.
 
-   After generation, extract the BASE64 data from the result and call
-   upload_to_r2 with the base64 string and concept_name to get a public URL.
+   The result is JSON with generation_id and image_base64. Pass the
+   image_base64, concept_name, and generation_id to upload_to_r2 to get
+   a public URL.
 
 7. **Send approval request via Telegram.** Use send_approval_request to present
    the top 3 concepts to the owner. Include the concept name, description,
-   target product type, and R2 image URL for each so the owner can see the
-   designs before approving.
+   target product type, and R2 image URL (from upload_to_r2 result) for each
+   so the owner can see the designs before approving.
 
 8. **Log to daily log.** Append to the daily log noting how many concepts were
    generated, the top picks, image generation results, and whether approval
@@ -820,6 +873,7 @@ python -c "
 exec(open('hobson/src/hobson/workflows/design_batch.py').read())
 assert 'generate_design_image' in DESIGN_BATCH_PROMPT
 assert 'upload_to_r2' in DESIGN_BATCH_PROMPT
+assert 'generation_id' in DESIGN_BATCH_PROMPT
 assert 'generate_design_image' in DESIGN_BATCH_BOOTSTRAP_PROMPT
 assert 'upload_to_r2' in DESIGN_BATCH_BOOTSTRAP_PROMPT
 assert 'send_approval_request' in DESIGN_BATCH_PROMPT
@@ -861,17 +915,21 @@ In Cloudflare dashboard:
 
 **Step 3: Add credentials to CT 255 .env**
 
-SSH from Loki:
+SSH from Loki. Use grep guards to avoid duplicate entries if re-run:
 ```bash
 ssh root@192.168.2.16
-pct exec 255 -- bash -c 'cat >> /root/builds-character/hobson/.env << EOF
+pct exec 255 -- bash -c '
+ENV=/root/builds-character/hobson/.env
+grep -q "R2_ACCOUNT_ID" "$ENV" || cat >> "$ENV" << EOF
+
 # Cloudflare R2
 R2_ACCOUNT_ID=<your-account-id>
 R2_ACCESS_KEY_ID=<your-access-key>
 R2_SECRET_ACCESS_KEY=<your-secret-key>
 R2_BUCKET_NAME=hobson-designs
 R2_PUBLIC_URL=https://pub-<hash>.r2.dev
-EOF'
+EOF
+'
 ```
 
 Replace `<placeholders>` with actual values from Step 2.
