@@ -1,15 +1,116 @@
 ---
 import Base from '../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const products = (await getCollection('products', ({ data }) => data.status === 'active'))
+  .sort((a, b) => b.data.addedDate.valueOf() - a.data.addedDate.valueOf());
+
+const productTypes = [...new Set(products.map(p => p.data.product_type))].sort();
 ---
 
 <Base title="Shop" description="Wearable suffering. Stickers, shirts, and gear for people who voluntarily do hard things.">
   <h1 class="font-display text-4xl font-bold mb-2">Shop</h1>
-  <p class="text-slate mb-10">Wearable suffering. Coming soon.</p>
+  <p class="text-slate mb-8">Wearable suffering. Stickers, shirts, and gear for people who voluntarily do hard things.</p>
 
-  <div class="border border-dashed border-charcoal/20 p-12 text-center">
-    <p class="text-slate text-lg mb-4">Hobson is currently generating designs and setting up the Printful store.</p>
-    <p class="text-sm text-slate/60 font-mono">
-      Check back soon, or follow on <a href="https://buildscharacter.substack.com" class="text-rust hover:underline">Substack</a> for launch announcements.
-    </p>
-  </div>
+  {products.length === 0 ? (
+    <div class="border border-dashed border-charcoal/20 p-12 text-center">
+      <p class="text-slate text-lg mb-4">Hobson is currently generating designs and setting up the store.</p>
+      <p class="text-sm text-slate/60 font-mono">
+        Check back soon, or follow on <a href="https://buildscharacter.substack.com" class="text-rust hover:underline">Substack</a> for launch announcements.
+      </p>
+    </div>
+  ) : (
+    <>
+      {/* Filter buttons */}
+      <div class="flex flex-wrap gap-2 mb-8">
+        <button
+          class="filter-btn text-sm font-mono px-3 py-1 border border-charcoal/20 text-rust underline underline-offset-4"
+          data-filter="all"
+        >
+          All
+        </button>
+        {productTypes.map((type) => (
+          <button
+            class="filter-btn text-sm font-mono px-3 py-1 border border-charcoal/20 text-slate hover:text-rust transition-colors"
+            data-filter={type}
+          >
+            {type.charAt(0).toUpperCase() + type.slice(1)}s
+          </button>
+        ))}
+      </div>
+
+      {/* Product grid */}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {products.map((product) => (
+          <div class="product-card border border-charcoal/10 bg-white overflow-hidden" data-type={product.data.product_type}>
+            <div class="aspect-square overflow-hidden bg-cream">
+              <img
+                src={product.data.image}
+                alt={product.data.name}
+                width={400}
+                height={400}
+                loading="lazy"
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div class="p-4">
+              <h2 class="font-display font-bold text-lg">{product.data.name}</h2>
+              <p class="text-slate text-sm mt-1 line-clamp-2">{product.data.description}</p>
+              <div class="flex items-center justify-between mt-3">
+                <span class="font-mono font-medium">${product.data.price.toFixed(2)}</span>
+                <span class="text-xs font-mono bg-charcoal/5 px-2 py-1 text-slate">
+                  {product.data.product_type}
+                </span>
+              </div>
+              <a
+                href={product.data.printful_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="buy-btn block w-full mt-4 py-2 text-center text-sm font-medium bg-rust text-offwhite hover:bg-rust/90 transition-colors"
+                data-product-name={product.data.name}
+                data-product-type={product.data.product_type}
+              >
+                Buy on Printful
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  )}
+
+  <script>
+    // Product type filtering
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.getAttribute('data-filter');
+
+        // Update active button styles
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.remove('text-rust', 'underline', 'underline-offset-4');
+          b.classList.add('text-slate');
+        });
+        btn.classList.remove('text-slate');
+        btn.classList.add('text-rust', 'underline', 'underline-offset-4');
+
+        // Show/hide products
+        document.querySelectorAll('.product-card').forEach(card => {
+          if (filter === 'all' || card.getAttribute('data-type') === filter) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      });
+    });
+
+    // Buy button click tracking
+    document.querySelectorAll('.buy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.getAttribute('data-product-name');
+        const type = btn.getAttribute('data-product-type');
+        console.log(`[shop] buy click: ${name} (${type})`);
+      });
+    });
+  </script>
 </Base>

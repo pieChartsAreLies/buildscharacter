@@ -12,4 +12,7 @@ export default defineConfig({
   },
   integrations: [sitemap()],
   output: 'static',
+  image: {
+    domains: ['pub-16bac62563eb4ef4939d29f3e11305db.r2.dev'],
+  },
 });

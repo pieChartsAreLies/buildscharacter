@@ -77,11 +77,35 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    target product type, and image URL (from generate_design_image result) for
    each so the owner can see the designs before approving.
 
-8. **Log to daily log.** Append to the daily log noting how many concepts were
+8. **Write product data file.** For each product created on Printful, write a
+   markdown file to 'site/src/data/products/{slug}.md' using create_blog_post_pr
+   (steady-state) or publish_blog_post (bootstrap). The file must have this
+   exact frontmatter format:
+
+   ---
+   name: "Product Name"
+   description: "One sentence product description"
+   price: 14.99
+   image: "https://pub-16bac62563eb4ef4939d29f3e11305db.r2.dev/designs/..."
+   printful_url: "https://buildscharacter.printful.me"
+   product_type: "mug"
+   status: "active"
+   addedDate: YYYY-MM-DD
+   ---
+
+   The slug should be lowercase-hyphenated (e.g., 'this-builds-character-mug.md').
+   The price must be a number (not a string). The image URL is from the
+   generate_design_image result. The addedDate is today's date.
+
+   Double-check: name is a string, price is a number with no quotes, image and
+   printful_url are valid URLs, product_type matches the enum (sticker, mug, pin,
+   print, poster, t-shirt), status is "active".
+
+9. **Log to daily log.** Append to the daily log noting how many concepts were
    generated, the top picks, image generation results, and whether approval
    was requested.
 
-9. **Update design inventory in Obsidian.** Append a summary to
+10. **Update design inventory in Obsidian.** Append a summary to
    '98 - Hobson Builds Character/Content/Designs/Concepts/' listing all new
    concepts with their status.
 
