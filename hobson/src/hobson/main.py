@@ -3,6 +3,7 @@
 import asyncio
 import logging
 
+import psycopg
 import uvicorn
 from langgraph.checkpoint.postgres import PostgresSaver
 
@@ -21,8 +22,9 @@ logger = logging.getLogger(__name__)
 async def main():
     logger.info("Starting Hobson agent...")
 
-    # Set up PostgreSQL checkpointer
-    checkpointer = PostgresSaver.from_conn_string(settings.database_url)
+    # Set up PostgreSQL checkpointer (requires autocommit connection)
+    conn = psycopg.connect(settings.database_url, autocommit=True)
+    checkpointer = PostgresSaver(conn)
     checkpointer.setup()
     logger.info("PostgreSQL checkpointer initialized")
 
