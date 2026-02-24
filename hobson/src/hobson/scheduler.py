@@ -9,8 +9,10 @@ from apscheduler.triggers.cron import CronTrigger
 
 from hobson.config import settings
 from hobson.db import HobsonDB
+from hobson.workflows.business_review import BUSINESS_REVIEW_PROMPT
 from hobson.workflows.content_pipeline import CONTENT_PIPELINE_PROMPT
 from hobson.workflows.design_batch import DESIGN_BATCH_PROMPT
+from hobson.workflows.morning_briefing import MORNING_BRIEFING_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +70,7 @@ def setup_schedules(agent):
     scheduler.add_job(
         run_workflow,
         CronTrigger(hour=7, minute=0, timezone="America/New_York"),
-        args=[agent, "morning_briefing", "Run the morning briefing: check analytics, log metrics to Obsidian, surface any anomalies via Telegram."],
+        args=[agent, "morning_briefing", MORNING_BRIEFING_PROMPT],
         id="morning_briefing",
     )
 
@@ -96,6 +98,6 @@ def setup_schedules(agent):
     scheduler.add_job(
         run_workflow,
         CronTrigger(day_of_week="sun", hour=18, timezone="America/New_York"),
-        args=[agent, "business_review", "Run the weekly business review: aggregate metrics, compare against quarterly goals, write the review to Obsidian."],
+        args=[agent, "business_review", BUSINESS_REVIEW_PROMPT],
         id="business_review",
     )

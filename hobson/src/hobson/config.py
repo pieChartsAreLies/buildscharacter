@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     github_token: str = ""  # Personal access token with repo scope
     github_repo: str = "pieChartsAreLies/buildscharacter"  # owner/repo
 
+    # Cloudflare Analytics
+    cloudflare_api_token: str = ""  # API token with Analytics:Read permission
+    cloudflare_zone_id: str = ""  # Zone ID for buildscharacter.com
+
     # Uptime Kuma
     uptime_kuma_push_url: str = ""
 

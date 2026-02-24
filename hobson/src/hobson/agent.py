@@ -13,6 +13,7 @@ from hobson.tools.obsidian import (
     read_note,
     write_note,
 )
+from hobson.tools.analytics import get_site_stats, get_top_pages, get_top_referrers
 from hobson.tools.git_ops import create_blog_post_pr, list_open_blog_prs
 from hobson.tools.printful import (
     create_store_product,
@@ -45,6 +46,7 @@ You have access to tools for:
 - Reading vault content to inform decisions
 - Creating blog post PRs on GitHub for content review
 - Managing the Printful merch pipeline (browse catalog, upload designs, create products)
+- Pulling site analytics from Cloudflare (pageviews, visitors, top pages, referrers)
 
 ## Operating Principles
 - Log significant actions to your daily log in Obsidian
@@ -69,6 +71,9 @@ TOOLS = [
     upload_design_file,
     create_store_product,
     list_store_products,
+    get_site_stats,
+    get_top_pages,
+    get_top_referrers,
 ]
 
 
