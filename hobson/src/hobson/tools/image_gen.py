@@ -75,22 +75,20 @@ def _rank_images_with_vision(
 
     try:
         client = genai.Client(api_key=settings.google_api_key)
-        parts = [
-            types.Part.from_text(
-                f"You are evaluating {len(images)} candidate images generated from this prompt:\n\n"
-                f"\"{prompt}\"\n\n"
-                "Rank them by: brand alignment (outdoor/endurance humor), visual clarity, "
-                "print-readiness (clean lines, no artifacts), and overall quality.\n\n"
-                "Reply with ONLY the number (1-based) of the best image. Nothing else."
-            )
+        contents = [
+            f"You are evaluating {len(images)} candidate images generated from this prompt:\n\n"
+            f"\"{prompt}\"\n\n"
+            "Rank them by: brand alignment (outdoor/endurance humor), visual clarity, "
+            "print-readiness (clean lines, no artifacts), and overall quality.\n\n"
+            "Reply with ONLY the number (1-based) of the best image. Nothing else."
         ]
         for i, img_bytes in enumerate(images):
-            parts.append(types.Part.from_text(f"\nImage {i + 1}:"))
-            parts.append(types.Part.from_bytes(data=img_bytes, mime_type="image/png"))
+            contents.append(f"\nImage {i + 1}:")
+            contents.append(types.Part.from_bytes(data=img_bytes, mime_type="image/png"))
 
         response = client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=parts,
+            contents=contents,
         )
         # Robust parsing: extract first number from response
         match = re.search(r"\d+", response.text)
