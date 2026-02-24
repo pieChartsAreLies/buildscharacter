@@ -117,3 +117,53 @@ class HobsonDB:
                 "UPDATE hobson.tasks SET status = %s, updated_at = NOW() WHERE id = %s",
                 (status, task_id),
             )
+
+    # -- Message history --
+
+    def store_message(self, chat_id: str, sender_name: str, content: str, is_from_hobson: bool = False):
+        with self._conn() as conn:
+            conn.execute(
+                """INSERT INTO hobson.messages (chat_id, sender_name, content, is_from_hobson)
+                   VALUES (%s, %s, %s, %s)""",
+                (chat_id, sender_name, content, is_from_hobson),
+            )
+
+    def get_recent_messages(self, chat_id: str, limit: int = 20) -> list[dict]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT sender_name, content, is_from_hobson, timestamp
+                   FROM hobson.messages
+                   WHERE chat_id = %s
+                   ORDER BY timestamp DESC
+                   LIMIT %s""",
+                (chat_id, limit),
+            ).fetchall()
+            return list(reversed(rows))  # chronological order
+
+    # -- Approvals --
+
+    def create_approval(self, request_id: str, action: str, reasoning: str, estimated_cost: float = 0):
+        with self._conn() as conn:
+            conn.execute(
+                """INSERT INTO hobson.approvals (request_id, action, reasoning, estimated_cost)
+                   VALUES (%s, %s, %s, %s)""",
+                (request_id, action, reasoning, estimated_cost),
+            )
+
+    def resolve_approval(self, request_id: str, approved: bool):
+        status = "approved" if approved else "denied"
+        with self._conn() as conn:
+            conn.execute(
+                """UPDATE hobson.approvals
+                   SET status = %s, resolved_at = NOW()
+                   WHERE request_id = %s""",
+                (status, request_id),
+            )
+
+    def get_approval_status(self, request_id: str) -> str | None:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT status FROM hobson.approvals WHERE request_id = %s",
+                (request_id,),
+            ).fetchone()
+            return row["status"] if row else None
