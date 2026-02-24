@@ -23,6 +23,26 @@ from hobson.db import HobsonDB
 
 logger = logging.getLogger(__name__)
 
+_TG_MAX_LEN = 4096
+
+
+def _chunk_text(text: str, max_len: int = _TG_MAX_LEN) -> list[str]:
+    """Split text into chunks that fit within Telegram's message limit."""
+    if len(text) <= max_len:
+        return [text]
+    chunks = []
+    while text:
+        if len(text) <= max_len:
+            chunks.append(text)
+            break
+        # Try to split at the last newline before the limit
+        split_at = text.rfind("\n", 0, max_len)
+        if split_at == -1:
+            split_at = max_len
+        chunks.append(text[:split_at])
+        text = text[split_at:].lstrip("\n")
+    return chunks
+
 # Module-level references set by init_telegram()
 _app: Optional[Application] = None
 _agent = None
@@ -130,11 +150,12 @@ async def _handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Store and send response
         _db.store_message(chat_id, "Hobson", response_text, is_from_hobson=True)
 
-        # S4: Markdown fallback on BadRequest
-        try:
-            await update.message.reply_text(response_text, parse_mode="Markdown")
-        except telegram.error.BadRequest:
-            await update.message.reply_text(response_text)
+        # S4: Chunk long messages, Markdown fallback on BadRequest
+        for chunk in _chunk_text(response_text):
+            try:
+                await update.message.reply_text(chunk, parse_mode="Markdown")
+            except telegram.error.BadRequest:
+                await update.message.reply_text(chunk)
 
         # Log the conversation turn
         logger.info(f"Telegram conversation: {sender_name} -> Hobson in chat {chat_id}")
@@ -237,11 +258,12 @@ async def send_message(text: str) -> str:
         text: Message text (supports Telegram markdown)
     """
     bot = Bot(token=settings.telegram_bot_token)
-    await bot.send_message(
-        chat_id=settings.telegram_chat_id,
-        text=text,
-        parse_mode="Markdown",
-    )
+    for chunk in _chunk_text(text):
+        await bot.send_message(
+            chat_id=settings.telegram_chat_id,
+            text=chunk,
+            parse_mode="Markdown",
+        )
     return "Message sent to Telegram"
 
 
