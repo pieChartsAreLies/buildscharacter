@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     monthly_cost_cap: float = 50.0
     single_action_cost_threshold: float = 5.0
 
+    # Bootstrap mode
+    bootstrap_mode: bool = False
+
     # Agent
     brand_guidelines_path: str = "brand/brand_guidelines.md"
 
