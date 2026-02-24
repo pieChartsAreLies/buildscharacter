@@ -61,13 +61,13 @@ def _format_history(messages: list[dict]) -> str:
 
 async def _load_standing_orders() -> str:
     """Load standing orders from Obsidian (async-safe via httpx)."""
-    url = f"http://{settings.obsidian_host}:{settings.obsidian_port}/vault/{quote(STANDING_ORDERS_PATH)}"
+    url = f"https://{settings.obsidian_host}:{settings.obsidian_port}/vault/{quote(STANDING_ORDERS_PATH)}"
     headers = {
         "Authorization": f"Bearer {settings.obsidian_api_key}",
         "Accept": "text/markdown",
     }
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
+        async with httpx.AsyncClient(timeout=10, verify=False) as client:
             resp = await client.get(url, headers=headers)
             if resp.status_code == 200:
                 return resp.text
@@ -190,14 +190,14 @@ async def _handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if record:
             proposed_text = record["action"]
-            url = f"http://{settings.obsidian_host}:{settings.obsidian_port}/vault/{quote(STANDING_ORDERS_PATH)}"
+            url = f"https://{settings.obsidian_host}:{settings.obsidian_port}/vault/{quote(STANDING_ORDERS_PATH)}"
             headers = {
                 "Authorization": f"Bearer {settings.obsidian_api_key}",
                 "Content-Type": "application/json",
             }
             # I2: Error handling around Obsidian PATCH
             try:
-                async with httpx.AsyncClient(timeout=10) as client:
+                async with httpx.AsyncClient(timeout=10, verify=False) as client:
                     resp = await client.patch(
                         url,
                         json={"content": f"\n- {proposed_text}", "operation": "append"},

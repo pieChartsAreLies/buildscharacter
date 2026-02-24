@@ -7,12 +7,12 @@ from langchain_core.tools import tool
 
 from hobson.config import settings
 
-_BASE_URL = f"http://{settings.obsidian_host}:{settings.obsidian_port}"
+_BASE_URL = f"https://{settings.obsidian_host}:{settings.obsidian_port}"
 _HEADERS = {"Authorization": f"Bearer {settings.obsidian_api_key}"}
 
 
 def _client() -> httpx.Client:
-    return httpx.Client(base_url=_BASE_URL, headers=_HEADERS, timeout=30)
+    return httpx.Client(base_url=_BASE_URL, headers=_HEADERS, timeout=30, verify=False)
 
 
 @tool
