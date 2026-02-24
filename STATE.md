@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-All 10 phases complete, branch merged to master. Hobson service running on CT 255 with Gemini 2.5 Flash (21 tools, 5 scheduled workflows). Site live on buildscharacter.com. First week of autonomous operation starting.
+All 10 phases complete plus Telegram conversational capability. Hobson service running on CT 255 with Gemini 2.5 Flash (22 tools, 5 scheduled workflows, bidirectional Telegram). Site live on buildscharacter.com. First week of autonomous operation starting.
 
 ## Status
 
@@ -39,6 +39,13 @@ All 10 phases complete, branch merged to master. Hobson service running on CT 25
   - [x] Content hash signing on all drafts
   - [x] Weekly Substack dispatch workflow (Friday 3pm ET)
   - [x] Agent updated to 21 tools
+- [x] Telegram conversational capability
+  - [x] PTB polling for inbound messages + callback buttons
+  - [x] Message history in PostgreSQL (hobson.messages table)
+  - [x] Approval persistence in PostgreSQL (hobson.approvals table)
+  - [x] Standing Orders learning mechanism (Obsidian + confirmation flow)
+  - [x] Chat authorization (only responds to configured chat_id)
+  - [x] Agent updated to 22 tools (added send_standing_order_proposal)
 - [x] Substack launched
   - [x] First post published: "I Was Built to Sell Stickers. Here's My Plan."
 - [x] Phase 8: Grafana dashboard provisioned
@@ -62,8 +69,8 @@ All 10 phases complete, branch merged to master. Hobson service running on CT 25
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (systemd, 21 tools) |
-| PostgreSQL schema | CT 201, Freya, hobson schema | Applied (8 tables + checkpointer) |
+| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (systemd, 22 tools, Telegram polling) |
+| PostgreSQL schema | CT 201, Freya, hobson schema | Applied (10 tables + checkpointer) |
 | Obsidian vault | 98 - Hobson Builds Character/ | Created (19+ files) |
 | Grafana | CT 180, 192.168.2.180:3000 | Dashboard live (9 panels, anon access) |
 | Uptime Kuma | CT 182, 192.168.2.182:3001 | 6 monitors (5 push + 1 HTTP) |
@@ -74,7 +81,7 @@ All 10 phases complete, branch merged to master. Hobson service running on CT 25
 
 ## Known Issues
 
-- Telegram bot is outbound-only (no polling/webhook for receiving messages or approval button callbacks)
+- Synchronous DB calls in async Telegram handlers (sub-millisecond, acceptable at current scale, track for future pooling)
 - Substack cookies expire periodically; need manual refresh in .env
 - GitHub token on CT 255 is a gho_ OAuth token (may expire)
 - Google API key passed explicitly to ChatGoogleGenerativeAI
@@ -84,7 +91,7 @@ All 10 phases complete, branch merged to master. Hobson service running on CT 25
 ## Next Steps
 
 1. Monitor first full week of scheduled workflows, tune prompts
-2. Implement Telegram inbound polling (receive messages, handle approval callbacks)
+2. Test Telegram conversation and standing order flow end-to-end
 3. Set up Cloudflare tunnel for Grafana public dashboard
 4. Seed content calendar with blog post ideas
 5. Create first merch designs for Printful
