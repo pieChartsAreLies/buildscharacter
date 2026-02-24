@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from langchain_anthropic import ChatAnthropic
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.prebuilt import create_react_agent
 
 from hobson.config import settings
@@ -57,7 +57,7 @@ TOOLS = [
 
 def create_agent(checkpointer=None):
     """Create and return the compiled Hobson agent graph."""
-    model = ChatAnthropic(model="claude-sonnet-4-20250514")
+    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
     return create_react_agent(
         model,
         TOOLS,
