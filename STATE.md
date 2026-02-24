@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-All 10 phases complete. Hobson service running on CT 255 with Gemini 2.5 Flash (21 tools, 5 scheduled workflows). Site live on buildscharacter.com. Grafana dashboard provisioned. Uptime Kuma monitors active. Ready for branch merge.
+All 10 phases complete, branch merged to master. Hobson service running on CT 255 with Gemini 2.5 Flash (21 tools, 5 scheduled workflows). Site live on buildscharacter.com. First week of autonomous operation starting.
 
 ## Status
 
@@ -74,6 +74,7 @@ All 10 phases complete. Hobson service running on CT 255 with Gemini 2.5 Flash (
 
 ## Known Issues
 
+- Telegram bot is outbound-only (no polling/webhook for receiving messages or approval button callbacks)
 - Substack cookies expire periodically; need manual refresh in .env
 - GitHub token on CT 255 is a gho_ OAuth token (may expire)
 - Google API key passed explicitly to ChatGoogleGenerativeAI
@@ -82,7 +83,8 @@ All 10 phases complete. Hobson service running on CT 255 with Gemini 2.5 Flash (
 
 ## Next Steps
 
-1. Merge feature/phase1-scaffolding branch to master
-2. Set up Cloudflare tunnel for Grafana public dashboard
-3. Monitor first full week of scheduled workflows
-4. Refresh Substack cookies when they expire
+1. Monitor first full week of scheduled workflows, tune prompts
+2. Implement Telegram inbound polling (receive messages, handle approval callbacks)
+3. Set up Cloudflare tunnel for Grafana public dashboard
+4. Seed content calendar with blog post ideas
+5. Create first merch designs for Printful
