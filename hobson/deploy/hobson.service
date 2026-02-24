@@ -1,0 +1,15 @@
+[Unit]
+Description=Hobson Autonomous Business Agent
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/builds-character/hobson
+Environment=PATH=/root/builds-character/hobson/.venv/bin:/usr/local/bin:/usr/bin
+ExecStart=/root/builds-character/hobson/.venv/bin/python -m hobson.main
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
