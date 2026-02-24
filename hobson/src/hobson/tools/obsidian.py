@@ -38,6 +38,8 @@ def read_note(path: str) -> str:
     """
     with _client() as client:
         resp = client.get(f"/vault/{path}", headers={"Accept": "text/markdown"})
+        if resp.status_code == 404:
+            return f"Note not found: {path}"
         resp.raise_for_status()
     return resp.text
 
@@ -99,5 +101,7 @@ def list_vault_folder(path: str) -> str:
     """
     with _client() as client:
         resp = client.get(f"/vault/{path}/")
+        if resp.status_code == 404:
+            return "[]"
         resp.raise_for_status()
     return resp.text
