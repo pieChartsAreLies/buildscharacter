@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-Phases 1-7 complete. Hobson service running on CT 255 with Gemini 2.5 Flash (21 tools). All 5 scheduled workflows have structured prompts. Site live on buildscharacter.com. Ready for Phase 8 (Grafana dashboard).
+All 10 phases complete. Hobson service running on CT 255 with Gemini 2.5 Flash (21 tools, 5 scheduled workflows). Site live on buildscharacter.com. Grafana dashboard provisioned. Uptime Kuma monitors active. Ready for branch merge.
 
 ## Status
 
@@ -41,6 +41,22 @@ Phases 1-7 complete. Hobson service running on CT 255 with Gemini 2.5 Flash (21 
   - [x] Agent updated to 21 tools
 - [x] Substack launched
   - [x] First post published: "I Was Built to Sell Stickers. Here's My Plan."
+- [x] Phase 8: Grafana dashboard provisioned
+  - [x] Service account + API token created
+  - [x] Hobson PostgreSQL data source added
+  - [x] 9-panel dashboard (operations, success rate, costs, content/designs/decisions, goals)
+  - [x] Anonymous access + embedding enabled in grafana.ini
+  - [x] Dashboard iframe embedded in site dashboard.astro
+  - [x] Note: local-only, needs CF tunnel for public access
+- [x] Phase 9: Uptime Kuma monitors configured
+  - [x] 5 push monitors (one per workflow) with per-workflow push URLs
+  - [x] 1 HTTP health monitor (CT 255:8080/health)
+  - [x] Push URLs configured in CT 255 .env and scheduler.py
+- [x] Phase 10: Final deployment verification
+  - [x] Service: active (running), 106.4MB memory
+  - [x] Health endpoint: OK
+  - [x] Scheduler: 5 jobs started
+  - [x] All 21 tools verified loading
 
 ## Infrastructure
 
@@ -49,8 +65,8 @@ Phases 1-7 complete. Hobson service running on CT 255 with Gemini 2.5 Flash (21 
 | Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (systemd, 21 tools) |
 | PostgreSQL schema | CT 201, Freya, hobson schema | Applied (8 tables + checkpointer) |
 | Obsidian vault | 98 - Hobson Builds Character/ | Created (19+ files) |
-| Grafana | CT 180, 192.168.2.180:3000 | Existing, dashboard TBD |
-| Uptime Kuma | CT 182 | Existing, monitors TBD |
+| Grafana | CT 180, 192.168.2.180:3000 | Dashboard live (9 panels, anon access) |
+| Uptime Kuma | CT 182, 192.168.2.182:3001 | 6 monitors (5 push + 1 HTTP) |
 | GitHub repo | pieChartsAreLies/buildscharacter | Public |
 | Cloudflare Pages | buildscharacter.com | Live |
 | Cloudflare Analytics | Zone ecdc733... | Token configured |
@@ -61,9 +77,12 @@ Phases 1-7 complete. Hobson service running on CT 255 with Gemini 2.5 Flash (21 
 - Substack cookies expire periodically; need manual refresh in .env
 - GitHub token on CT 255 is a gho_ OAuth token (may expire)
 - Google API key passed explicitly to ChatGoogleGenerativeAI
+- Grafana admin password was reset to temppass123 during setup; change it back and update Bitwarden
+- Grafana dashboard is local-only (192.168.2.180); needs Cloudflare tunnel for public access on buildscharacter.com/dashboard
 
 ## Next Steps
 
-1. Phase 8: Grafana public dashboard (Task 24)
-2. Phase 9: Uptime Kuma monitors (Task 25)
-3. Phase 10: Final deployment verification (Task 26)
+1. Merge feature/phase1-scaffolding branch to master
+2. Set up Cloudflare tunnel for Grafana public dashboard
+3. Monitor first full week of scheduled workflows
+4. Refresh Substack cookies when they expire
