@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-Phases 1-5 complete. Hobson service running on CT 255 with Gemini 2.5 Flash (15 tools). Site live on buildscharacter.com. Substack launched. Merch pipeline tools built. Ready for Phase 6 (analytics & reporting).
+Phases 1-6 complete. Hobson service running on CT 255 with Gemini 2.5 Flash (18 tools). All 5 scheduled workflows have structured prompts. Site live on buildscharacter.com. Ready for Phase 7 (Substack integration).
 
 ## Status
 
@@ -23,9 +23,7 @@ Phases 1-5 complete. Hobson service running on CT 255 with Gemini 2.5 Flash (15 
   - [x] Astro 5 site scaffolded with Tailwind v4, sitemap
   - [x] 6 pages: home, blog, shop (placeholder), dashboard (placeholder), about
   - [x] Content collections (blog) with hello-world sample post
-  - [x] Build verified (all pages compile cleanly)
   - [x] Code pushed to GitHub (pieChartsAreLies/buildscharacter, public)
-  - [x] PR #1 merged to master
   - [x] Cloudflare Pages connected and deploying
   - [x] Custom domain configured (buildscharacter.com)
 - [x] Phase 3: Core agent built and running
@@ -35,28 +33,24 @@ Phases 1-5 complete. Hobson service running on CT 255 with Gemini 2.5 Flash (15 
   - [x] LangGraph agent (create_react_agent with Gemini 2.5 Flash)
   - [x] Health endpoint (FastAPI /health on :8080)
   - [x] Scheduler (APScheduler with 5 cron workflows, circuit breaking)
-  - [x] Main entry point (checkpointer + agent + scheduler + health)
   - [x] Systemd service (enabled, running, auto-restart)
-  - [x] DB integration test passed (run log, decisions, costs, metrics)
-  - [x] Health endpoint verified: {"status":"ok","agent":"hobson","version":"0.1.0"}
-  - [x] Telegram test message sent to Hobson's Folly group
-  - [x] CT 255 repo converted from manual push to proper git clone
 - [x] Phase 4: Content pipeline built
   - [x] Git operations tool (git_ops.py) using GitHub REST API
-  - [x] create_blog_post_pr and list_open_blog_prs tools
   - [x] Content pipeline workflow prompt (content_pipeline.py)
-  - [x] Scheduler wired to structured content pipeline prompt
-  - [x] Content Calendar populated in Obsidian (7 planned topics + backlog)
-  - [x] Code deployed to CT 255, service running
+  - [x] Content Calendar populated in Obsidian
 - [x] Phase 5: Merch pipeline built
   - [x] Printful API tool (5 functions: list catalog, get variants, upload file, create product, list store)
   - [x] Design batch workflow prompt (design_batch.py)
-  - [x] Agent updated to 15 tools (added 5 Printful tools)
-  - [x] Scheduler wired to structured design batch prompt
-  - [ ] Code deployed to CT 255
+- [x] Phase 6: Analytics & reporting built
+  - [x] Cloudflare Analytics tool (3 functions: site stats, top pages, top referrers)
+  - [x] Replaced planned Umami with Cloudflare GraphQL API (no new service needed)
+  - [x] Morning briefing workflow prompt (morning_briefing.py)
+  - [x] Weekly business review workflow prompt (business_review.py)
+  - [x] Agent updated to 18 tools
+  - [x] All 5 scheduler jobs use structured prompts
+  - [x] Config updated with cloudflare_api_token and cloudflare_zone_id
 - [x] Substack launched
   - [x] First post published: "I Was Built to Sell Stickers. Here's My Plan."
-  - [x] source-sha256: 2511156213db3ef3a041a7c2cb22b22e87e4d8e33e3013e20abb2a6b98d2b74c
 
 ## Infrastructure
 
@@ -77,13 +71,12 @@ Phases 1-5 complete. Hobson service running on CT 255 with Gemini 2.5 Flash (15 
 - Substack has no public API; python-substack (reverse-engineered) is fragile
 - GitHub token on CT 255 is a gho_ OAuth token (may expire); should replace with a fine-grained PAT
 - Google API key passed explicitly to ChatGoogleGenerativeAI (pydantic-settings doesn't set env vars)
-- Phase 5 code not yet deployed to CT 255 (needs git pull + service restart)
+- Cloudflare API token and zone ID not yet added to CT 255 .env (need to create token in CF dashboard)
 
 ## Next Steps
 
-1. Deploy Phase 5 code to CT 255
-2. Phase 6: Analytics & Reporting (Tasks 19-21)
-3. Phase 7: Substack integration (Tasks 22-23)
-4. Phase 8: Grafana dashboard (Task 24)
-5. Phase 9: Uptime Kuma monitors (Task 25)
-6. Phase 10: Final deployment and systemd verification (Task 26)
+1. Phase 7: Substack integration (Tasks 22-23)
+2. Phase 8: Grafana dashboard (Task 24)
+3. Phase 9: Uptime Kuma monitors (Task 25)
+4. Phase 10: Final deployment and systemd verification (Task 26)
+5. Create Cloudflare API token (Analytics:Read) and add to CT 255 .env
