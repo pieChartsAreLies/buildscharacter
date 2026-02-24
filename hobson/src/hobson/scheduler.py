@@ -46,7 +46,7 @@ async def run_workflow(agent, workflow_name: str, message: str):
     run_id = db.log_run_start(workflow=workflow_name, inputs={"message": message})
 
     try:
-        result = agent.invoke(
+        result = await agent.ainvoke(
             {"messages": [{"role": "user", "content": message}]},
             config={"configurable": {"thread_id": f"workflow-{workflow_name}"}},
         )
