@@ -62,3 +62,15 @@ recognition, and want to slap them on a water bottle or wear them to their
 next trail run. Start with stickers and simple text-based designs.
 The goal is volume and iteration, not perfection.
 """
+
+DESIGN_BATCH_BOOTSTRAP_PROMPT = DESIGN_BATCH_PROMPT.replace(
+    "6. **Send approval request via Telegram.** Use send_approval_request to present\n"
+    "   the top 3 concepts to the owner. Include the concept name, description, and\n"
+    "   target product type for each.",
+    "6. **Create products on Printful.** For your top 3 ranked concepts, use\n"
+    "   create_store_product to create each one. Note: products may go live\n"
+    "   immediately, so only push concepts you are confident in.\n"
+    "\n"
+    "   Then notify via Telegram with the product names and a note that the\n"
+    "   owner should review them on Printful.",
+)
