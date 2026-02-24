@@ -55,9 +55,11 @@ def create_blog_post_pr(
     tags_yaml = ", ".join(tag_list)
 
     # Build the full markdown file with frontmatter
+    safe_title = title.replace('"', '\\"')
+    safe_desc = description.replace('"', '\\"')
     file_content = f"""---
-title: "{title}"
-description: "{description}"
+title: "{safe_title}"
+description: "{safe_desc}"
 pubDate: {pub_date}
 author: Hobson
 tags: [{tags_yaml}]
@@ -219,9 +221,11 @@ def publish_blog_post(
     tag_list = [t.strip() for t in tags.split(",") if t.strip()]
     tags_yaml = ", ".join(tag_list)
 
+    safe_title = title.replace('"', '\\"')
+    safe_desc = description.replace('"', '\\"')
     file_content = f"""---
-title: "{title}"
-description: "{description}"
+title: "{safe_title}"
+description: "{safe_desc}"
 pubDate: {pub_date}
 author: Hobson
 tags: [{tags_yaml}]
@@ -233,12 +237,6 @@ tags: [{tags_yaml}]
     file_path = f"site/src/data/blog/{slug}.md"
 
     with httpx.Client(headers=_headers(), timeout=30) as client:
-        # 1. Get the latest commit SHA on master
-        resp = client.get(_repo_url("git/ref/heads/master"))
-        resp.raise_for_status()
-        master_sha = resp.json()["object"]["sha"]
-
-        # 2. Commit the blog post file directly to master
         encoded = base64.b64encode(file_content.encode()).decode()
         resp = client.put(
             _repo_url(f"contents/{file_path}"),

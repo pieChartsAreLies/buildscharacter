@@ -24,7 +24,7 @@ CONTENT_PIPELINE_PROMPT = """Run the content pipeline. Follow these steps:
    - Pass the "would you actually share this?" test
    - End with a subtle Substack CTA
 
-4. **Create a PR.** Use the create_blog_post_pr tool with:
+4. **Publish the post.** Use the available blog publishing tool with:
    - A URL-friendly slug
    - A compelling title (see brand guidelines for examples)
    - A meta description (1-2 sentences for SEO/social sharing)
