@@ -68,14 +68,14 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    generate_design_image with the prompt, concept_name, product_type, and
    appropriate aspect_ratio.
 
-   The result is JSON with generation_id and image_base64. Pass the
-   image_base64, concept_name, and generation_id to upload_to_r2 to get
-   a public URL.
+   The result is JSON with image_url (the public R2 URL), generation_id,
+   width, height, and other metadata. The image is automatically uploaded
+   to R2 during generation. Use the image_url for Printful and Telegram.
 
 7. **Send approval request via Telegram.** Use send_approval_request to present
    the top 3 concepts to the owner. Include the concept name, description,
-   target product type, and R2 image URL (from upload_to_r2 result) for each
-   so the owner can see the designs before approving.
+   target product type, and image URL (from generate_design_image result) for
+   each so the owner can see the designs before approving.
 
 8. **Log to daily log.** Append to the daily log noting how many concepts were
    generated, the top picks, image generation results, and whether approval
@@ -94,12 +94,12 @@ The goal is volume and iteration, not perfection.
 DESIGN_BATCH_BOOTSTRAP_PROMPT = DESIGN_BATCH_PROMPT.replace(
     "7. **Send approval request via Telegram.** Use send_approval_request to present\n"
     "   the top 3 concepts to the owner. Include the concept name, description,\n"
-    "   target product type, and R2 image URL (from upload_to_r2 result) for each\n"
-    "   so the owner can see the designs before approving.",
+    "   target product type, and image URL (from generate_design_image result) for\n"
+    "   each so the owner can see the designs before approving.",
     "7. **Create products on Printful.** For your top 3 ranked concepts, use\n"
-    "   upload_design_file with the R2 image URL, then create_store_product to\n"
-    "   create each one. Note: products may go live immediately, so only push\n"
-    "   concepts you are confident in.\n"
+    "   upload_design_file with the image URL from generate_design_image, then\n"
+    "   create_store_product to create each one. Note: products may go live\n"
+    "   immediately, so only push concepts you are confident in.\n"
     "\n"
     "   Then notify via Telegram with the product names, image URLs, and a note\n"
     "   that the owner should review them on Printful.",

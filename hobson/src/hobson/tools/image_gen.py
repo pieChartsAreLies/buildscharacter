@@ -47,6 +47,30 @@ def _sanitize_filename(concept_name: str) -> str:
     return f"{uuid.uuid4()}-{sanitized}.png"
 
 
+def _upload_bytes_to_r2(image_bytes: bytes, concept_name: str) -> tuple[str, str]:
+    """Upload image bytes to R2 and return (public_url, filename)."""
+    filename = _sanitize_filename(concept_name)
+    r2_key = f"designs/{filename}"
+
+    s3 = boto3.client(
+        "s3",
+        endpoint_url=f"https://{settings.r2_account_id}.r2.cloudflarestorage.com",
+        aws_access_key_id=settings.r2_access_key_id,
+        aws_secret_access_key=settings.r2_secret_access_key,
+        region_name="auto",
+    )
+
+    s3.put_object(
+        Bucket=settings.r2_bucket_name,
+        Key=r2_key,
+        Body=image_bytes,
+        ContentType="image/png",
+    )
+
+    public_url = f"{settings.r2_public_url}/{r2_key}"
+    return public_url, filename
+
+
 def _check_dimensions(
     width: int, height: int, product_type: str
 ) -> str | None:
@@ -115,11 +139,11 @@ async def generate_design_image(
     product_type: str = "sticker",
     aspect_ratio: str = "1:1",
 ) -> str:
-    """Generate a design image using Gemini Imagen 4.0.
+    """Generate a design image using Gemini Imagen 4.0 and upload it to R2.
 
     Generates 4 candidate images, uses vision AI to select the best one,
-    and validates dimensions against product requirements. Returns a JSON
-    string with generation_id and image_base64 for use with upload_to_r2.
+    validates dimensions, uploads to Cloudflare R2, and logs metadata to
+    PostgreSQL. Returns a JSON string with the public image URL.
 
     Args:
         prompt: Detailed image generation prompt assembled from the structured template.
@@ -227,16 +251,22 @@ async def generate_design_image(
     if dim_warning:
         logger.warning(dim_warning)
 
-    # Encode as base64 for return
-    image_b64 = base64.b64encode(selected_bytes).decode("utf-8")
+    # Upload to R2 directly (avoids passing megabytes of base64 through LLM context)
+    try:
+        public_url, filename = _upload_bytes_to_r2(selected_bytes, concept_name)
+    except Exception as e:
+        logger.error("R2 upload failed for %s: %s", concept_name, e)
+        public_url, filename = "", ""
 
-    # Log to DB and get the generation_id for targeted upload_to_r2 update
+    # Log to DB with URL
     generation_id = _db.log_design_generation(
         concept_name=concept_name,
         generation_prompt=prompt,
         model_version=_MODEL,
         product_type=product_type,
         generation_status="success",
+        image_url=public_url or None,
+        r2_filename=filename or None,
         image_width=width,
         image_height=height,
     )
@@ -245,15 +275,17 @@ async def generate_design_image(
         "status": "success",
         "generation_id": generation_id,
         "concept_name": concept_name,
+        "image_url": public_url,
         "width": width,
         "height": height,
         "candidates": len(candidate_bytes),
         "selected": best_idx + 1,
         "model": _MODEL,
-        "image_base64": image_b64,
     }
     if dim_warning:
         result["dimension_warning"] = dim_warning
+    if not public_url:
+        result["r2_warning"] = "Upload to R2 failed; image generated but not stored"
 
     return json.dumps(result)
 
