@@ -40,6 +40,13 @@ CONTENT_PIPELINE_PROMPT = """Run the content pipeline. Follow these steps:
 7. **Notify via Telegram.** Send a message with the post title and PR link
    so the owner can review.
 
+8. **Check bootstrap progress (if applicable).** Use list_store_products to
+   count store products. Count published entries in the content calendar.
+   If you have 10+ published posts AND 15+ store products, send a Telegram
+   message: "Bootstrap target reached: X posts published, Y products in store.
+   Recommend switching to steady-state. Set BOOTSTRAP_MODE=false in .env and
+   restart the service."
+
 Remember: you are Hobson. Write like Hobson. The content should be genuinely
 funny and relatable to people who voluntarily suffer outdoors.
 """
