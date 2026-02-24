@@ -33,8 +33,12 @@ class Settings(BaseSettings):
     cloudflare_api_token: str = ""  # API token with Analytics:Read permission
     cloudflare_zone_id: str = ""  # Zone ID for buildscharacter.com
 
-    # Uptime Kuma
-    uptime_kuma_push_url: str = ""
+    # Uptime Kuma push URLs (one per workflow)
+    uptime_kuma_push_morning_briefing: str = ""
+    uptime_kuma_push_content_pipeline: str = ""
+    uptime_kuma_push_design_batch: str = ""
+    uptime_kuma_push_substack_dispatch: str = ""
+    uptime_kuma_push_business_review: str = ""
 
     # Cost controls
     monthly_cost_cap: float = 50.0

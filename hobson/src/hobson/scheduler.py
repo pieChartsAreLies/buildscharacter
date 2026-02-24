@@ -24,6 +24,16 @@ _failure_counts: dict[str, int] = {}
 _CIRCUIT_BREAKER_THRESHOLD = 3
 
 
+# Map workflow names to their Uptime Kuma push URLs
+_PUSH_URLS = {
+    "morning_briefing": lambda: settings.uptime_kuma_push_morning_briefing,
+    "content_pipeline": lambda: settings.uptime_kuma_push_content_pipeline,
+    "design_batch": lambda: settings.uptime_kuma_push_design_batch,
+    "substack_dispatch": lambda: settings.uptime_kuma_push_substack_dispatch,
+    "business_review": lambda: settings.uptime_kuma_push_business_review,
+}
+
+
 async def run_workflow(agent, workflow_name: str, message: str):
     """Execute a workflow with retry, circuit breaking, and run logging."""
     db = HobsonDB(settings.database_url)
@@ -43,13 +53,12 @@ async def run_workflow(agent, workflow_name: str, message: str):
         db.log_run_complete(run_id, status="success", outputs={"response": "ok"})
         _failure_counts[workflow_name] = 0
 
-        # Ping Uptime Kuma on success
-        if settings.uptime_kuma_push_url:
+        # Ping this workflow's Uptime Kuma push URL on success
+        push_url = _PUSH_URLS.get(workflow_name, lambda: "")()
+        if push_url:
             try:
                 async with httpx.AsyncClient() as client:
-                    await client.get(
-                        f"{settings.uptime_kuma_push_url}?status=up&msg={workflow_name}+OK"
-                    )
+                    await client.get(push_url)
             except Exception:
                 pass
 
