@@ -4,6 +4,7 @@ import logging
 import traceback
 import uuid
 from typing import Optional
+from urllib.parse import quote
 
 import httpx
 import telegram.error
@@ -60,7 +61,7 @@ def _format_history(messages: list[dict]) -> str:
 
 async def _load_standing_orders() -> str:
     """Load standing orders from Obsidian (async-safe via httpx)."""
-    url = f"http://{settings.obsidian_host}:{settings.obsidian_port}/vault/{STANDING_ORDERS_PATH}"
+    url = f"http://{settings.obsidian_host}:{settings.obsidian_port}/vault/{quote(STANDING_ORDERS_PATH)}"
     headers = {
         "Authorization": f"Bearer {settings.obsidian_api_key}",
         "Accept": "text/markdown",
@@ -189,7 +190,7 @@ async def _handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if record:
             proposed_text = record["action"]
-            url = f"http://{settings.obsidian_host}:{settings.obsidian_port}/vault/{STANDING_ORDERS_PATH}"
+            url = f"http://{settings.obsidian_host}:{settings.obsidian_port}/vault/{quote(STANDING_ORDERS_PATH)}"
             headers = {
                 "Authorization": f"Bearer {settings.obsidian_api_key}",
                 "Content-Type": "application/json",
