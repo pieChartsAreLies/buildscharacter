@@ -16,7 +16,7 @@ Get buildscharacter.com to a launchable state with 10+ blog posts, 15+ Printful 
 |---|---|---|
 | Implementation approach | Env-based bootstrap mode | Single toggle controls cadence, publishing method, and approval gates. Clean, auditable. |
 | Content publishing | Direct to master (no PR) | Faster, no review bottleneck. New `publish_blog_post` tool. PR tool stays for steady-state. |
-| Design approval | Skip during bootstrap | Auto-push top concepts to Printful. Telegram notification after the fact. |
+| Design approval | Skip during bootstrap | Create as Printful drafts (not published). Telegram notification with review link. |
 | Publication dates | Real dates, publish immediately | On-brand with radical transparency. Backdating risky for SEO and contradicts Hobson's identity. |
 | Sprint cadence | 3x/day content, daily designs | Aggressive but sustainable. 10+ posts in 3-4 days. |
 | Content seeding | Expand to 22 topics | Covers sprint duration. Mix of listicles, gear reviews, humor essays, meta/transparency. |
@@ -39,7 +39,22 @@ This flag controls:
 
 New function in `git_ops.py`. Same parameters as `create_blog_post_pr` (slug, title, description, content, tags, pub_date). Commits directly to `master` branch via GitHub API. Returns the commit URL.
 
-The existing `create_blog_post_pr` tool remains unchanged and available for steady-state use. Both tools are registered on the agent; the workflow prompt tells Hobson which to use based on mode.
+**Pre-flight checks (per Gemini review):** Before committing, the tool validates:
+- Frontmatter parses correctly (title, description, pubDate, tags all present)
+- Content body meets minimum word count (250 words)
+- Slug is URL-safe (lowercase, hyphens, no special characters)
+
+If any check fails, the tool raises an error with the specific failure reason. No commit happens.
+
+The existing `create_blog_post_pr` tool remains unchanged and available for steady-state use.
+
+## 2a. Code-Level Tool Selection (per Gemini review)
+
+Tool availability is controlled in code, not prompts. In `agent.py`, the `create_agent` function checks `settings.bootstrap_mode`:
+- **Bootstrap mode:** Agent receives `publish_blog_post` but NOT `create_blog_post_pr`
+- **Steady-state:** Agent receives `create_blog_post_pr` but NOT `publish_blog_post`
+
+This eliminates the risk of the LLM choosing the wrong tool. The workflow prompts no longer need mode-aware instructions for tool selection.
 
 ## 3. Sprint Schedule
 
@@ -49,20 +64,20 @@ In `scheduler.py`, check `settings.bootstrap_mode` when registering jobs:
 |---|---|---|
 | Morning briefing | Daily 7am ET | Daily 7am ET (no change) |
 | Content pipeline | MWF 10am ET | **Daily 8am, 1pm, 6pm ET** |
+| Bootstrap diary | N/A | **Daily 9pm ET** (bootstrap only) |
 | Design batch | Mon 2pm ET | **Daily 2pm ET** |
 | Substack dispatch | Fri 3pm ET | Fri 3pm ET (no change) |
 | Business review | Sun 6pm ET | Sun 6pm ET (no change) |
 
 Content pipeline runs 3x/day = ~21 posts/week.
-Design batch runs daily = 5-10 concepts/day, top 3 pushed to Printful = ~21 products/week.
+Bootstrap diary runs 1x/day = daily operational summary (bootstrap only).
+Design batch runs daily = 5-10 concepts/day, top 3 as Printful drafts = ~21 draft products/week.
 
 ## 4. Workflow Prompt Changes
 
 ### Content Pipeline (bootstrap mode)
 
-Add mode-aware instruction at top of prompt:
-
-> "BOOTSTRAP MODE: Use publish_blog_post (not create_blog_post_pr) to publish directly to master. Do not create a PR. The post goes live immediately when Cloudflare Pages rebuilds."
+Tool selection is handled at the code level (section 2a), so the prompt doesn't need mode-switching instructions. The agent only sees `publish_blog_post` in bootstrap mode and uses it naturally.
 
 Rest of workflow unchanged: pick topic from calendar, write post, log to Obsidian, update calendar, notify via Telegram.
 
@@ -70,9 +85,19 @@ Rest of workflow unchanged: pick topic from calendar, write post, log to Obsidia
 
 Add mode-aware instruction:
 
-> "BOOTSTRAP MODE: After ranking your top 3 concepts, proceed directly to creating products on Printful using create_store_product. Do not send an approval request. Notify via Telegram with what you uploaded so the owner can review after the fact."
+> "BOOTSTRAP MODE: After ranking your top 3 concepts, create them as draft products on Printful using create_store_product. Do not send an approval request. Notify via Telegram with the draft product links so the owner can review and publish."
+
+Note: Products are created as Printful drafts, not published. Owner clicks to publish from the Telegram notification link. This maintains velocity while preventing low-quality products from going live.
 
 Rest of workflow unchanged: review inventory, read brand guidelines, generate concepts, save to Obsidian, log activity.
+
+### Bootstrap Diary (new, bootstrap mode only)
+
+A daily "Bootstrap Diary" post is added as a 4th content pipeline run at 9pm ET. This is a short, raw operational summary:
+
+> "Day 1: Published 3 posts (topics X, Y, Z). Generated 5 design concepts, pushed 3 to Printful drafts. Encountered one GitHub API error, retried successfully. Current counts: 3/10 posts, 3/15 products."
+
+This turns the bootstrap process itself into the most compelling content on the site. The HN/Reddit audience will find the real-time AI operational diary more interesting than the regular blog posts. Published via `publish_blog_post` with slug pattern `bootstrap-diary-day-N`.
 
 ## 5. Threshold Checking
 
@@ -126,8 +151,9 @@ Expand the content calendar in Obsidian from 13 to ~22 topics. Distribution:
 | `hobson/src/hobson/tools/git_ops.py` | Add `publish_blog_post` tool |
 | `hobson/src/hobson/agent.py` | Register `publish_blog_post` in TOOLS list |
 | `hobson/src/hobson/scheduler.py` | Conditional sprint schedule when bootstrap_mode=True |
-| `hobson/src/hobson/workflows/content_pipeline.py` | Add bootstrap mode prompt variant |
-| `hobson/src/hobson/workflows/design_batch.py` | Add bootstrap mode prompt variant |
+| `hobson/src/hobson/workflows/content_pipeline.py` | Minor prompt updates (tool selection handled in code) |
+| `hobson/src/hobson/workflows/design_batch.py` | Add bootstrap mode prompt (Printful drafts, skip approval) |
+| `hobson/src/hobson/workflows/bootstrap_diary.py` | New: daily operational diary prompt |
 | CT 255 `.env` | Add `BOOTSTRAP_MODE=true` |
 | Obsidian content calendar | Expand to 22 topics |
 
@@ -137,7 +163,8 @@ Expand the content calendar in Obsidian from 13 to ~22 topics. Distribution:
 
 | Risk | Mitigation |
 |---|---|
-| Content quality drops at 3x/day | Seeded topics provide direction. Brand guidelines in system prompt. User can pull back any post. |
+| Content quality drops at 3x/day | Seeded topics provide direction. Brand guidelines in system prompt. Pre-flight checks block malformed posts. User can pull back any post. |
+| Bad product goes live on Printful | Products created as drafts, not published. Owner reviews and publishes from Telegram link. |
 | Printful rate limiting | Printful API is generous. Design batch creates 3 products/day max. |
 | Gemini quota | 2.5 Flash has high rate limits. 4 workflow runs/day is well within bounds. |
 | Content repetition | 22 seeded topics prevent overlap. Calendar tracks what's been written. |
