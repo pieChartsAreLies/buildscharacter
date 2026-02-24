@@ -87,17 +87,19 @@ def get_site_stats(days: int = 1) -> str:
     total_requests = sum(g["sum"]["requests"] for g in groups)
 
     lines = [f"Site stats for {start} to {end} ({days} day{'s' if days > 1 else ''}):",
-             f"  Pageviews: {total_pageviews:,}",
-             f"  Unique visitors: {total_visitors:,}",
-             f"  Total requests: {total_requests:,}"]
+             f"  Pageviews: {total_pageviews:,} (actual page loads, the real number)",
+             f"  Unique IPs: {total_visitors:,} (includes bots/crawlers, not real visitors)",
+             f"  Total requests: {total_requests:,} (all requests including assets/bots)",
+             "",
+             "NOTE: Use pageviews as the primary traffic metric. Unique IPs are inflated",
+             "by bots and crawlers. For Substack reporting, lead with pageviews."]
 
     if days > 1 and len(groups) > 1:
         lines.append("\nDaily breakdown:")
         for g in groups:
             d = g["dimensions"]["date"]
             pv = g["sum"]["pageViews"]
-            uv = g["uniq"]["uniques"]
-            lines.append(f"  {d}: {pv} pageviews, {uv} visitors")
+            lines.append(f"  {d}: {pv} pageviews")
 
     return "\n".join(lines)
 
