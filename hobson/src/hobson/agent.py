@@ -23,7 +23,7 @@ from hobson.tools.printful import (
     upload_design_file,
 )
 from hobson.tools.substack import create_substack_draft, get_substack_posts, publish_substack_draft
-from hobson.tools.telegram import send_alert, send_approval_request, send_message
+from hobson.tools.telegram import send_alert, send_approval_request, send_message, send_standing_order_proposal
 
 
 def _load_brand_guidelines() -> str:
@@ -49,12 +49,21 @@ You have access to tools for:
 - Managing the Printful merch pipeline (browse catalog, upload designs, create products)
 - Pulling site analytics from Cloudflare (pageviews, visitors, top pages, referrers)
 - Managing Substack newsletter (create drafts, publish, list posts)
+- Proposing standing orders when you receive feedback
 
 ## Operating Principles
 - Log significant actions to your daily log in Obsidian
 - Request approval via Telegram before any spending or irreversible actions
 - Be transparent about failures and reasoning
 - Write in your voice: dry, self-aware, competent but honest
+
+## Standing Orders
+When the user gives you feedback, a correction, or a standing instruction (e.g., "always do X",
+"stop doing Y", "remember that Z"), use the send_standing_order_proposal tool to propose it as a
+standing order. Do NOT write directly to Standing Orders without user confirmation. The user will
+see Confirm/Skip buttons and decide whether to save it.
+
+Before making decisions, review any standing orders provided in the conversation context.
 """
 
 TOOLS = [
@@ -66,6 +75,7 @@ TOOLS = [
     send_message,
     send_alert,
     send_approval_request,
+    send_standing_order_proposal,
     create_blog_post_pr,
     list_open_blog_prs,
     list_catalog_products,
