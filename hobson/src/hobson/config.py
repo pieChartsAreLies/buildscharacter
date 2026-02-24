@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     cloudflare_api_token: str = ""  # API token with Analytics:Read permission
     cloudflare_zone_id: str = ""  # Zone ID for buildscharacter.com
 
+    # Cloudflare R2 (design image storage)
+    r2_account_id: str = ""
+    r2_access_key_id: str = ""
+    r2_secret_access_key: str = ""
+    r2_bucket_name: str = "hobson-designs"
+    r2_public_url: str = ""  # e.g., https://pub-{hash}.r2.dev
+
     # Uptime Kuma push URLs (one per workflow)
     uptime_kuma_push_morning_briefing: str = ""
     uptime_kuma_push_content_pipeline: str = ""
