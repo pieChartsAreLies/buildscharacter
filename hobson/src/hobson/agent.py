@@ -14,7 +14,7 @@ from hobson.tools.obsidian import (
     write_note,
 )
 from hobson.tools.analytics import get_site_stats, get_top_pages, get_top_referrers
-from hobson.tools.git_ops import create_blog_post_pr, list_open_blog_prs
+from hobson.tools.git_ops import create_blog_post_pr, list_open_blog_prs, publish_blog_post
 from hobson.tools.printful import (
     create_store_product,
     get_catalog_product_variants,
@@ -66,7 +66,7 @@ see Confirm/Skip buttons and decide whether to save it.
 Before making decisions, review any standing orders provided in the conversation context.
 """
 
-TOOLS = [
+_COMMON_TOOLS = [
     write_note,
     read_note,
     append_to_note,
@@ -76,8 +76,6 @@ TOOLS = [
     send_alert,
     send_approval_request,
     send_standing_order_proposal,
-    create_blog_post_pr,
-    list_open_blog_prs,
     list_catalog_products,
     get_catalog_product_variants,
     upload_design_file,
@@ -91,6 +89,15 @@ TOOLS = [
     get_substack_posts,
 ]
 
+_BOOTSTRAP_GIT_TOOLS = [publish_blog_post, list_open_blog_prs]
+_STEADYSTATE_GIT_TOOLS = [create_blog_post_pr, list_open_blog_prs]
+
+
+def _get_tools() -> list:
+    """Return tools list based on bootstrap_mode setting."""
+    git_tools = _BOOTSTRAP_GIT_TOOLS if settings.bootstrap_mode else _STEADYSTATE_GIT_TOOLS
+    return _COMMON_TOOLS + git_tools
+
 
 def create_agent(checkpointer=None):
     """Create and return the compiled Hobson agent graph."""
@@ -100,7 +107,7 @@ def create_agent(checkpointer=None):
     )
     return create_react_agent(
         model,
-        TOOLS,
+        _get_tools(),
         prompt=SYSTEM_PROMPT,
         checkpointer=checkpointer,
     )
