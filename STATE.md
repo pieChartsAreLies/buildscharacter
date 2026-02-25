@@ -83,11 +83,20 @@ Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggr
   - [x] Design batch workflow updated with structured prompt template
   - [x] First successful end-to-end run: 5 concepts, 3 images, 3 Printful products created
 
+- [x] Shop Overhaul + "Build Character" Rebrand (2026-02-25)
+  - [x] Rebranded "This Builds Character" to "Build Character" across brand guidelines, prompts, and site
+  - [x] Removed all existing products (3 mugs, 1 t-shirt) for sticker-first relaunch
+  - [x] Added LANCZOS auto-upscaling in image_gen.py (1024->1500+ for stickers)
+  - [x] Added Printful Mockup Generator integration (get_mockup_styles, generate_product_mockup)
+  - [x] Registered 2 new tools in agent (24 -> 26 tools)
+  - [x] Updated design batch workflow with mockup generation step
+  - [x] 25/25 tests passing
+
 ## Infrastructure
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (BOOTSTRAP_MODE, 8 jobs, 24 tools) |
+| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (BOOTSTRAP_MODE, 8 jobs, 26 tools) |
 | PostgreSQL schema | CT 201, Freya, hobson schema | Applied (11 tables + checkpointer) |
 | Cloudflare R2 | hobson-designs bucket | Active (3 designs uploaded) |
 | Obsidian vault | 98 - Hobson Builds Character/ | Created (19+ files) |
@@ -106,15 +115,29 @@ Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggr
 - Google API key passed explicitly to ChatGoogleGenerativeAI
 - Grafana admin password was reset to temppass123 during setup; change it back and update Bitwarden
 - Grafana dashboard is local-only (192.168.2.180); needs Cloudflare tunnel for public access on buildscharacter.com/dashboard
-- Imagen outputs 1024x1024; below Printful minimum for stickers (1500x1500). Fine for mugs/pins. May need upscaling later.
+- Imagen outputs 1024x1024; auto-upscaled via LANCZOS to meet Printful minimums (e.g., 1500x1500 for stickers)
 - Vision ranking occasionally falls back to first image on API errors (non-blocking)
 - Previous design_generations records (IDs 1-2) have no image_url from early test runs
 
+## Voice Split (2026-02-25)
+
+Enforced two-voice split across all content:
+- **Blog**: Human experience only. Zero AI references. Hobson writes as a lover of hard things.
+- **Substack**: AI transparency, business operations, co-authored with Michael.
+- Removed 3 blog posts (cold-plunge-reality, measuring-humor, week-1-revenue)
+- Rewrote hello-world launch post (brand-focused, not AI-focused)
+- Updated brand_guidelines.md, content_pipeline.py, bootstrap_diary.py, substack_dispatch.py
+- Bootstrap diary no longer publishes to blog (logs to Obsidian for Substack source material)
+- Content calendar cleaned: AI topics moved to Substack section
+- Deployed to CT 255, service restarted
+
 ## Next Steps
 
-1. Monitor bootstrap sprint execution (first content pipeline run at next scheduled time)
+1. Monitor next content pipeline run to verify Hobson follows the new voice rules
 2. Set up Cloudflare tunnel for Grafana public dashboard
 3. Watch for threshold notification (10+ posts AND 15+ products), then set BOOTSTRAP_MODE=false and restart
 4. Promote on Reddit/HN once content inventory is built
 5. Restore Grafana admin password and update Bitwarden
-6. Consider image upscaling for sticker-size products (1024->1500+)
+6. Verify Printful storefront is configured for checkout (payment gateway, shipping, billing)
+7. Order a test sticker to verify LANCZOS upscale quality on physical product
+8. Write first "From the Operator" Substack section (Michael's perspective on the voice correction)
