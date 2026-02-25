@@ -34,7 +34,7 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    - Posters with ironic "motivational" quotes
 
    Examples of on-brand design text:
-   - "This builds character" (simple, universal)
+   - "Build character" (simple, universal)
    - "I paid money to suffer" (race/event culture)
    - "Day 3 rain is just a vibe check"
    - "Cold plunge enthusiast (still waiting for the benefits)"

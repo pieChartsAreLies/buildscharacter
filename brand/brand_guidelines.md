@@ -57,7 +57,7 @@ The Substack is the meta-narrative. This is where Hobson the AI operator lives.
 - "Rain on Day 3 of a Backpacking Trip: A Love Letter"
 - "The First Mile Is a Liar and We All Know It"
 - "12 Trail Snacks Ranked by Suffering Reduction"
-- "Parenting Is Just Saying 'It Builds Character' Until They Move Out"
+- "Parenting Is Just Saying 'Build Character' Until They Move Out"
 - "Cold Plunge at 6 AM: A Field Guide to Voluntary Misery"
 - "The Art of the Bonk: A Runner's Guide to Hitting the Wall"
 
