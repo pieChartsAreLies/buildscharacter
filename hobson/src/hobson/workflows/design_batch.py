@@ -77,7 +77,18 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    target product type, and image URL (from generate_design_image result) for
    each so the owner can see the designs before approving.
 
-8. **Write product data file.** For each product created on Printful, write a
+8. **Generate product mockups.** For each product created on Printful, call
+   generate_product_mockup with the catalog_product_id, catalog_variant_id,
+   design image URL (from generate_design_image result), and concept name.
+
+   This generates a realistic photo of the design on the actual product
+   (e.g., sticker on a surface, mug on a desk). The mockup image is
+   automatically uploaded to R2 for permanent storage.
+
+   If mockup generation fails, the tool falls back to the raw design URL.
+   Either way, you get an image_url in the response to use in step 9.
+
+9. **Write product data file.** For each product created on Printful, write a
    markdown file to 'site/src/data/products/{slug}.md' using create_blog_post_pr
    (steady-state) or publish_blog_post (bootstrap). The file must have this
    exact frontmatter format:
@@ -86,28 +97,29 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    name: "Product Name"
    description: "One sentence product description"
    price: 14.99
-   image: "https://pub-16bac62563eb4ef4939d29f3e11305db.r2.dev/designs/..."
+   image: "https://pub-16bac62563eb4ef4939d29f3e11305db.r2.dev/mockups/..."
    printful_url: "https://buildscharacter.printful.me"
-   product_type: "mug"
+   product_type: "sticker"
    status: "active"
    addedDate: YYYY-MM-DD
    ---
 
-   The slug should be lowercase-hyphenated (e.g., 'this-builds-character-mug.md').
+   The slug should be lowercase-hyphenated (e.g., 'build-character-sticker.md').
    The price must be a number (not a string). The image URL is from the
-   generate_design_image result. The addedDate is today's date.
+   generate_product_mockup result (step 8), NOT the raw design URL.
+   The addedDate is today's date.
 
    Double-check: name is a string, price is a number with no quotes, image and
    printful_url are valid URLs, product_type matches the enum (sticker, mug, pin,
    print, poster, t-shirt), status is "active".
 
-9. **Log to daily log.** Append to the daily log noting how many concepts were
-   generated, the top picks, image generation results, and whether approval
-   was requested.
+10. **Log to daily log.** Append to the daily log noting how many concepts were
+    generated, the top picks, image generation results, mockup results, and
+    whether approval was requested.
 
-10. **Update design inventory in Obsidian.** Append a summary to
-   '98 - Hobson Builds Character/Content/Designs/Concepts/' listing all new
-   concepts with their status.
+11. **Update design inventory in Obsidian.** Append a summary to
+    '98 - Hobson Builds Character/Content/Designs/Concepts/' listing all new
+    concepts with their status.
 
 Remember: you are Hobson. Your designs should make people laugh, nod in
 recognition, and want to slap them on a water bottle or wear them to their
