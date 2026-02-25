@@ -87,6 +87,34 @@ def _check_dimensions(
     return None
 
 
+def _upscale_if_needed(
+    img: Image.Image, product_type: str
+) -> tuple[Image.Image, bool]:
+    """Upscale image to meet Printful minimums if needed.
+
+    Returns (image, was_upscaled). The returned image is either the original
+    (if already large enough) or an upscaled copy using LANCZOS resampling.
+    """
+    key = product_type.lower().strip()
+    if key not in _MIN_DIMENSIONS:
+        return img, False
+    min_w, min_h = _MIN_DIMENSIONS[key]
+    width, height = img.size
+    if width >= min_w and height >= min_h:
+        return img, False
+
+    # Calculate scale factor to meet both minimum dimensions
+    scale = max(min_w / width, min_h / height)
+    new_w = int(width * scale)
+    new_h = int(height * scale)
+    upscaled = img.resize((new_w, new_h), Image.LANCZOS)
+    logger.info(
+        "Upscaled %s from %dx%d to %dx%d (%.1fx) for product type '%s'",
+        product_type, width, height, new_w, new_h, scale, key,
+    )
+    return upscaled, True
+
+
 def _rank_images_with_vision(
     images: list[bytes], prompt: str
 ) -> int:
@@ -244,8 +272,14 @@ async def generate_design_image(
     best_idx = _rank_images_with_vision(candidate_bytes, prompt)
     selected_bytes = candidate_bytes[best_idx]
 
-    # Check dimensions
+    # Upscale if below Printful minimums, then check final dimensions
     img = Image.open(io.BytesIO(selected_bytes))
+    img, was_upscaled = _upscale_if_needed(img, product_type)
+    if was_upscaled:
+        # Re-encode upscaled image to bytes for upload
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        selected_bytes = buf.getvalue()
     width, height = img.size
     dim_warning = _check_dimensions(width, height, product_type)
     if dim_warning:

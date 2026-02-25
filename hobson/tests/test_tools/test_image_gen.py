@@ -7,6 +7,8 @@ that pull in pydantic_settings and other CT-255-only dependencies.
 import re
 import uuid
 
+from PIL import Image
+
 
 # --- Copied from hobson/src/hobson/tools/image_gen.py --------------------------
 # Keep in sync with the source.
@@ -49,6 +51,25 @@ def _check_dimensions(
 
 
 # --- End copy -----------------------------------------------------------------
+
+
+def _upscale_if_needed(
+    img: Image.Image, product_type: str
+) -> tuple[Image.Image, bool]:
+    """Upscale image to meet Printful minimums if needed."""
+    key = product_type.lower().strip()
+    if key not in _MIN_DIMENSIONS:
+        return img, False
+    min_w, min_h = _MIN_DIMENSIONS[key]
+    width, height = img.size
+    if width >= min_w and height >= min_h:
+        return img, False
+
+    scale = max(min_w / width, min_h / height)
+    new_w = int(width * scale)
+    new_h = int(height * scale)
+    upscaled = img.resize((new_w, new_h), Image.LANCZOS)
+    return upscaled, True
 
 
 class TestSanitizeFilename:
@@ -115,3 +136,54 @@ class TestCheckDimensions:
         result = _check_dimensions(2048, 2048, "poster")
         assert result is not None
         assert "5400x7200" in result
+
+
+class TestUpscaleIfNeeded:
+    """Tests for _upscale_if_needed."""
+
+    def _make_image(self, width: int, height: int) -> Image.Image:
+        """Create a test image of given dimensions."""
+        return Image.new("RGBA", (width, height), (255, 0, 0, 255))
+
+    def test_sticker_below_minimum_is_upscaled(self):
+        img = self._make_image(1024, 1024)
+        result, was_upscaled = _upscale_if_needed(img, "sticker")
+        assert was_upscaled is True
+        assert result.size[0] >= 1500
+        assert result.size[1] >= 1500
+
+    def test_sticker_at_minimum_not_upscaled(self):
+        img = self._make_image(1500, 1500)
+        result, was_upscaled = _upscale_if_needed(img, "sticker")
+        assert was_upscaled is False
+        assert result.size == (1500, 1500)
+
+    def test_sticker_above_minimum_not_upscaled(self):
+        img = self._make_image(2000, 2000)
+        result, was_upscaled = _upscale_if_needed(img, "sticker")
+        assert was_upscaled is False
+        assert result.size == (2000, 2000)
+
+    def test_unknown_product_type_not_upscaled(self):
+        img = self._make_image(100, 100)
+        result, was_upscaled = _upscale_if_needed(img, "unknown-widget")
+        assert was_upscaled is False
+        assert result.size == (100, 100)
+
+    def test_pin_at_1024_meets_minimum(self):
+        """Pin minimum is 1000x1000, so 1024x1024 should not upscale."""
+        img = self._make_image(1024, 1024)
+        result, was_upscaled = _upscale_if_needed(img, "pin")
+        assert was_upscaled is False
+
+    def test_case_insensitive_product_type(self):
+        img = self._make_image(1024, 1024)
+        result, was_upscaled = _upscale_if_needed(img, "Sticker")
+        assert was_upscaled is True
+        assert result.size[0] >= 1500
+
+    def test_upscale_preserves_aspect_ratio(self):
+        """A 1024x1024 image upscaled for stickers should remain square."""
+        img = self._make_image(1024, 1024)
+        result, _ = _upscale_if_needed(img, "sticker")
+        assert result.size[0] == result.size[1]
