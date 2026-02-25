@@ -178,7 +178,7 @@ Hobson is a named AI agent persona with a specific, memorable voice. He is separ
 |  |  +-- Obsidian REST API (vault documentation)  | |
 |  |  +-- Git (site repo, deploy on push)          | |
 |  |  +-- Umami API (analytics)                    | |
-|  |  +-- Image Generation (DALL-E / Midjourney)   | |
+|  |  +-- Image Generation (Gemini / NanoBanana)    | |
 |  |  +-- Substack API (newsletter publishing)     | |
 |  +----------------------------------------------+ |
 +---------------------------------------------------+
@@ -255,7 +255,7 @@ Programmatic safeguards to prevent runaway spending:
 - **Daily budget tracker:** Sum of all API costs checked before dispatching paid jobs
 - **Hard monthly cap:** If monthly costs exceed threshold (configurable, default $50), all paid API calls blocked. Telegram alert sent.
 - **Single-action threshold:** Any action estimated >$5 requires Telegram approval, even if within budget.
-- **Provider-level billing caps:** Set in Claude, Midjourney, and any other provider's billing dashboard as a backstop.
+- **Provider-level billing caps:** Set in Claude, Google AI, and any other provider's billing dashboard as a backstop.
 
 ### State Management
 
@@ -288,7 +288,7 @@ Required secrets:
 - Social media API tokens (Instagram, X)
 - Obsidian REST API bearer token
 - Telegram bot token
-- Midjourney/image generation API key
+- Google AI API key (Gemini text + image generation)
 - Substack session token or API key
 - PostgreSQL connection string
 
@@ -440,7 +440,7 @@ Embedded on buildscharacter.com/dashboard as a public, read-only iframe. Anyone 
 | Claude (Max subscription) | $0 incremental | Shared with Bob/Tim, existing subscription |
 | Gemini API | ~$0-50/year | Free tier covers most usage; low-stakes tasks |
 | Ollama (existing CT 205) | $0 | Already running |
-| Image generation (Midjourney) | $120-350/year | $10-30/mo, Standard plan |
+| Image generation (Gemini/NanoBanana) | ~$0-50/year | Included with Gemini API, same key as text |
 | Logo/brand identity polish | $100-200 | Fiverr, only if AI output needs refinement |
 | Social ad testing (phased) | $200-400 | Only after organic signals confirmed |
 | Tools contingency | $100-200 | Supplementary tools as needed |

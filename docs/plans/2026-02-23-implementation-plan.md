@@ -46,18 +46,13 @@ These must be done before implementation begins. They require account creation, 
 3. TikTok: @buildscharacter (or available variant)
 4. Save credentials to Bitwarden
 
-### P5: Set Up Midjourney
-
-1. Subscribe to Midjourney Standard plan ($30/mo)
-2. Save credentials to Bitwarden under "Hobson Midjourney"
-
-### P6: Create GitHub Repo
+### P5: Create GitHub Repo
 
 1. Create `buildscharacter` repo on GitHub (or Gitea if self-hosted)
 2. This will host the website source. Hobson will open PRs here for content review.
 3. Connect to Cloudflare Pages (Settings > Pages > Create project > Connect to Git)
 
-### P7: Move Overseerr Tunnel
+### P6: Move Overseerr Tunnel
 
 1. In Cloudflare dashboard, change the Overseerr tunnel from `buildscharacter.com` to `overseerr.buildscharacter.com` (or another subdomain)
 2. Free up the root domain for the website
@@ -418,7 +413,7 @@ CREATE TABLE IF NOT EXISTS hobson.run_log (
 CREATE TABLE IF NOT EXISTS hobson.cost_log (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     run_id UUID REFERENCES hobson.run_log(run_id),
-    provider TEXT NOT NULL,              -- midjourney, gemini, etc.
+    provider TEXT NOT NULL,              -- gemini, anthropic, ollama, etc.
     action TEXT NOT NULL,                -- image_generation, api_call, etc.
     estimated_cost DECIMAL(10,4) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -1229,11 +1224,13 @@ httpx client wrapping Printful REST API:
 
 On trigger:
 1. Read brand guidelines
-2. Generate 5-10 design concept descriptions
-3. Use image generation API to create designs
+2. Generate 5-10 design concept descriptions (using Claude or Gemini for ideation)
+3. Use Gemini image generation (NanoBanana / Gemini 2.5 Flash Image) via `langchain-google-genai` to create designs
 4. Save concepts to Obsidian (Content/Designs/Concepts/)
 5. Upload best designs to Printful
 6. Log to run_log and Obsidian
+
+Note: Image generation uses the same `GOOGLE_API_KEY` already configured for Gemini text. No additional accounts or subscriptions required.
 
 ---
 

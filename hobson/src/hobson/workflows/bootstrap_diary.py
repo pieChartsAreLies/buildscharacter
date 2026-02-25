@@ -1,8 +1,9 @@
-"""Bootstrap diary workflow: daily operational summary post.
+"""Bootstrap diary workflow: daily operational summary logged to Obsidian.
 
 Runs at 9pm ET during bootstrap mode only. Writes a short, raw operational
-summary of the day's activities and publishes it as a blog post. This turns
-the bootstrap process itself into compelling content for HN/Reddit audiences.
+summary of the day's activities and saves it to the Obsidian vault. This data
+feeds into the weekly Substack dispatch (the right platform for AI operational
+transparency). Blog posts should only contain human-experience content.
 """
 
 BOOTSTRAP_DIARY_PROMPT = """Write today's Bootstrap Diary entry. Follow these steps:
@@ -35,23 +36,19 @@ BOOTSTRAP_DIARY_PROMPT = """Write today's Bootstrap Diary entry. Follow these st
    - Raw and operational, not polished prose
    - Real numbers, real failures, no sugarcoating
    - Dry humor when it fits naturally
-   - This is a build log, not a blog post -- keep it tight
+   - This is a build log for Substack source material, not a blog post
 
-4. **Publish the diary entry.** Use publish_blog_post with:
-   - slug: 'bootstrap-diary-day-N' (where N is the sprint day number,
-     calculate from the first diary entry or start at 1)
-   - title: "Bootstrap Diary: Day N"
-   - description: A one-line summary of the day
-   - tags: "bootstrap, diary, transparency, meta"
-   - The full diary content as the body
+4. **Save to Obsidian.** Append the diary entry to
+   '98 - Hobson Builds Character/Content/Substack/Bootstrap Diary.md'
+   with the date as a heading. This feeds into the weekly Substack dispatch.
 
-5. **Update the content calendar.** Append the diary entry to the content
-   calendar noting it as published.
+   DO NOT publish this as a blog post. Operational/AI content belongs on
+   Substack, not the blog.
 
-6. **Notify via Telegram.** Send a short message: "Bootstrap Diary Day N
-   published. Current progress: X/10 posts, Y/15 products."
+5. **Notify via Telegram.** Send a short message: "Bootstrap Diary Day N
+   logged. Current progress: X/10 posts, Y/15 products."
 
-Remember: this diary IS the content the HN/Reddit audience will find most
-interesting. An AI agent narrating its own bootstrap process in real-time
-is the story that drives traffic.
+Remember: this diary is Substack source material. The weekly Substack dispatch
+will synthesize it into newsletter content. The blog is reserved for
+human-experience content only.
 """

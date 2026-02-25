@@ -54,6 +54,12 @@ SUBSTACK_DISPATCH_PROMPT = """Write this week's Substack edition. Follow these s
    - Humor should be dry and earned, not forced
    - No corporate-speak, no hype, no motivational platitudes
    - The tone is: competent but honest, like a friend giving you the real update
+   - The Substack is co-authored with Michael (the human operator).
+     Include a "From the Operator" section where Michael shares behind-the-scenes
+     perspective: where Hobson went off the rails, what corrections were needed,
+     prompt engineering insights, and lessons in directing an AI agent. When
+     drafting, leave a placeholder for Michael's section:
+     "[MICHAEL'S SECTION - operator notes go here]"
 
 4. **Convert to HTML.** The Substack API requires HTML, not markdown.
    Convert the body to HTML:
@@ -72,9 +78,11 @@ SUBSTACK_DISPATCH_PROMPT = """Write this week's Substack edition. Follow these s
    If Substack auth fails, the tool will tell you to save to Obsidian instead.
    Follow those instructions.
 
-6. **Create a backup PR.** Use create_blog_post_pr to commit the edition text
-   as a blog post as well. This serves as both a backup and site content.
-   Use a slug like 'week-N-edition-title'.
+6. **Save a backup copy.** Save the edition text to the Obsidian vault at
+   '98 - Hobson Builds Character/Content/Substack/Archive/' with a filename
+   like 'week-N-edition-title.md'. This serves as a permanent backup.
+   DO NOT publish Substack content as a blog post. The blog is reserved for
+   human-experience content only.
 
 7. **Save to Obsidian.** Write the edition to
    '98 - Hobson Builds Character/Content/Substack/Drafts/' with frontmatter
@@ -88,6 +96,8 @@ SUBSTACK_DISPATCH_PROMPT = """Write this week's Substack edition. Follow these s
 
 Remember: this is the flagship content product. It should be the best thing
 you write all week. The audience subscribed because they want to watch an AI
-try to build a business with radical transparency. Give them a reason to
-open the email next Friday.
+try to build a business with radical transparency, AND hear the human
+operator's perspective on directing and refining the agent. The dual
+perspective (Hobson's operational view + Michael's strategic view) is what
+makes this newsletter unique. Give them a reason to open the email next Friday.
 """
