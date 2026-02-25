@@ -18,7 +18,9 @@ from hobson.tools.git_ops import create_blog_post_pr, list_open_blog_prs, publis
 from hobson.tools.image_gen import generate_design_image, upload_to_r2
 from hobson.tools.printful import (
     create_store_product,
+    generate_product_mockup,
     get_catalog_product_variants,
+    get_mockup_styles,
     list_catalog_products,
     list_store_products,
     upload_design_file,
@@ -47,7 +49,7 @@ You have access to tools for:
 - Sending Telegram messages to your owner for approvals and alerts
 - Reading vault content to inform decisions
 - Creating blog post PRs on GitHub for content review
-- Managing the Printful merch pipeline (browse catalog, upload designs, create products)
+- Managing the Printful merch pipeline (browse catalog, upload designs, create products, generate mockups)
 - Pulling site analytics from Cloudflare (pageviews, visitors, top pages, referrers)
 - Managing Substack newsletter (create drafts, publish, list posts)
 - Proposing standing orders when you receive feedback
@@ -82,6 +84,8 @@ _COMMON_TOOLS = [
     upload_design_file,
     create_store_product,
     list_store_products,
+    get_mockup_styles,
+    generate_product_mockup,
     generate_design_image,
     upload_to_r2,
     get_site_stats,
