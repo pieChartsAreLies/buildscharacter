@@ -26,6 +26,18 @@ def _headers() -> dict:
     }
 
 
+_CATEGORY_MAP = {
+    "STICKER": 202,
+    "MUG": 195,
+    "T-SHIRT": 24,
+    "HOODIE": 28,
+    "POSTER": 35,
+    "HAT": 7,
+    "TOTE": 152,
+    "PHONE-CASE": 100,
+}
+
+
 @tool
 def list_catalog_products(product_type: str = "") -> str:
     """Browse Printful's catalog of available products.
@@ -38,14 +50,16 @@ def list_catalog_products(product_type: str = "") -> str:
         product_type: Optional filter by type (e.g., 'T-SHIRT', 'STICKER',
                       'MUG', 'POSTER'). Leave empty to browse all.
     """
-    params = {"limit": 20}
+    params = {}
     if product_type:
-        params["type"] = product_type.upper()
+        category_id = _CATEGORY_MAP.get(product_type.upper())
+        if category_id:
+            params["category_id"] = category_id
 
     with httpx.Client(headers=_headers(), timeout=30) as client:
-        resp = client.get(f"{_API_BASE}/v2/catalog-products", params=params)
+        resp = client.get(f"{_API_BASE}/products", params=params)
         resp.raise_for_status()
-        data = resp.json().get("data", [])
+        data = resp.json().get("result", [])
 
     if not data:
         return f"No catalog products found for type '{product_type}'."
@@ -53,7 +67,7 @@ def list_catalog_products(product_type: str = "") -> str:
     lines = []
     for p in data:
         lines.append(
-            f"- ID {p['id']}: {p['name']} "
+            f"- ID {p['id']}: {p['title']} "
             f"(type: {p.get('type', '?')}, variants: {p.get('variant_count', '?')})"
         )
     return f"Found {len(data)} products:\n" + "\n".join(lines)
