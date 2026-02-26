@@ -1,0 +1,15 @@
+[Unit]
+Description=Order Guard - Printful webhook order limiter
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/builds-character/order-guard
+Environment=PATH=/root/builds-character/order-guard/.venv/bin:/usr/local/bin:/usr/bin
+ExecStart=/root/builds-character/order-guard/.venv/bin/python -m order_guard.main
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
