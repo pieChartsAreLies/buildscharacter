@@ -88,30 +88,22 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    If mockup generation fails, the tool falls back to the raw design URL.
    Either way, you get an image_url in the response to use in step 9.
 
-9. **Write product data file.** For each product created on Printful, write a
-   markdown file to 'site/src/data/products/{slug}.md' using create_blog_post_pr
-   (steady-state) or publish_blog_post (bootstrap). The file must have this
-   exact frontmatter format:
+9. **Publish product to site.** For each product created on Printful, call
+   the publish_product tool with these parameters:
 
-   ---
-   name: "Product Name"
-   description: "One sentence product description"
-   price: 14.99
-   image: "https://pub-16bac62563eb4ef4939d29f3e11305db.r2.dev/mockups/..."
-   printful_url: "https://buildscharacter.printful.me"
-   product_type: "sticker"
-   status: "active"
-   addedDate: YYYY-MM-DD
-   ---
+   - slug: lowercase-hyphenated product name (e.g. "type-2-fun-certified-sticker")
+   - name: Product display name (e.g. "Type 2 Fun Certified Sticker")
+   - description: 1-2 sentence product description
+   - price: Retail price as a string (e.g. "4.99" for stickers, "14.99" for
+     mugs, "24.99" for t-shirts)
+   - image_url: The mockup URL from generate_product_mockup (step 8). If mockup
+     generation failed, use the design URL from generate_design_image (step 6).
+   - printful_url: "https://buildscharacter.printful.me"
+   - product_type: One of sticker, mug, pin, print, poster, t-shirt
 
-   The slug should be lowercase-hyphenated (e.g., 'build-character-sticker.md').
-   The price must be a number (not a string). The image URL is from the
-   generate_product_mockup result (step 8), NOT the raw design URL.
-   The addedDate is today's date.
-
-   Double-check: name is a string, price is a number with no quotes, image and
-   printful_url are valid URLs, product_type matches the enum (sticker, mug, pin,
-   print, poster, t-shirt), status is "active".
+   This tool writes the product markdown file to site/src/data/products/{slug}.md
+   on the master branch via GitHub API and triggers a Cloudflare Pages deploy.
+   No separate git commit or PR step is needed.
 
 10. **Log to daily log.** Append to the daily log noting how many concepts were
     generated, the top picks, image generation results, mockup results, and
