@@ -92,11 +92,25 @@ Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggr
   - [x] Updated design batch workflow with mockup generation step
   - [x] 25/25 tests passing
 
+- [x] Visibility & Cleanup Sprint (2026-02-26)
+  - [x] publish_product tool added to git_ops.py (writes product markdown to site repo via GitHub API)
+  - [x] get_pending_approvals tool added to telegram.py (queries unresolved approvals for morning briefing)
+  - [x] Registered 2 new tools in agent (26 -> 28 tools)
+  - [x] Backfilled product markdown for 4 existing Printful products (shop page now displays them)
+  - [x] Design batch workflow updated to use publish_product (future products auto-publish to site)
+  - [x] Morning briefing enhanced with structured Telegram daily digest (schedule, approvals, output, attention items)
+  - [x] Confirmed Telegram inbound polling is working (messages received, approval callbacks functional)
+  - [x] Obsidian Task Dashboard expanded with per-project sections (#BuildsCharacter, #NanoClaw, etc.)
+  - [x] Homelab-docs tasks migrated to tagged Obsidian tasks
+  - [x] Hobson Task Queue cleaned up with #BuildsCharacter tags and Printful storefront checklist
+  - [x] 38/38 tests passing
+  - [x] Deployed to CT 255, service restarted
+
 ## Infrastructure
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (BOOTSTRAP_MODE, 8 jobs, 26 tools) |
+| Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (BOOTSTRAP_MODE, 8 jobs, 28 tools) |
 | PostgreSQL schema | CT 201, Freya, hobson schema | Applied (11 tables + checkpointer) |
 | Cloudflare R2 | hobson-designs bucket | Active (3 designs uploaded) |
 | Obsidian vault | 98 - Hobson Builds Character/ | Created (19+ files) |
@@ -133,11 +147,13 @@ Enforced two-voice split across all content:
 
 ## Next Steps
 
-1. Monitor next content pipeline run to verify Hobson follows the new voice rules
-2. Set up Cloudflare tunnel for Grafana public dashboard
-3. Watch for threshold notification (10+ posts AND 15+ products), then set BOOTSTRAP_MODE=false and restart
-4. Promote on Reddit/HN once content inventory is built
-5. Restore Grafana admin password and update Bitwarden
-6. Verify Printful storefront is configured for checkout (payment gateway, shipping, billing)
-7. Order a test sticker to verify LANCZOS upscale quality on physical product
-8. Write first "From the Operator" Substack section (Michael's perspective on the voice correction)
+1. Complete Printful storefront setup (billing done, still need: enable storefront, Stripe, shipping, returns, tax, branding)
+2. Set retail prices in Printful for all 4 products (currently null -- mugs $14.99, t-shirt $24.99)
+3. Monitor tomorrow's morning briefing to verify new Telegram daily digest format
+4. Set up Cloudflare tunnel for Grafana public dashboard
+5. Watch for threshold notification (10+ posts AND 15+ products), then set BOOTSTRAP_MODE=false and restart
+6. Promote on Reddit/HN once content inventory is built
+7. Restore Grafana admin password and update Bitwarden
+8. Order a test sticker to verify LANCZOS upscale quality on physical product
+9. Write first "From the Operator" Substack section (Michael's perspective on the voice correction)
+10. Design gap: approval callbacks flip DB flag but don't re-trigger workflow (approved work waits for next scheduled run)
