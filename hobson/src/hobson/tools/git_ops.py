@@ -250,3 +250,120 @@ tags: [{tags_yaml}]
         commit_url = resp.json()["commit"]["html_url"]
 
     return f"Published to master: {commit_url}"
+
+
+_PRODUCT_TYPES = {"sticker", "mug", "pin", "print", "poster", "t-shirt"}
+
+
+def _validate_product(
+    slug: str,
+    name: str,
+    description: str,
+    price: str,
+    image: str,
+    printful_url: str,
+    product_type: str,
+) -> list[str]:
+    """Validate product fields before publishing.
+
+    Returns a list of error strings. An empty list means valid.
+    """
+    errors: list[str] = []
+
+    if not _SLUG_RE.match(slug):
+        errors.append(
+            f"Slug '{slug}' is not URL-safe "
+            "(must match ^[a-z0-9]+(?:-[a-z0-9]+)*$)"
+        )
+
+    if not name.strip():
+        errors.append("Name is empty")
+
+    if not description.strip():
+        errors.append("Description is empty")
+
+    try:
+        float(price)
+    except (ValueError, TypeError):
+        errors.append(f"Price '{price}' is not a valid number")
+
+    if not image.strip():
+        errors.append("Image URL is empty")
+
+    if not printful_url.strip():
+        errors.append("Printful URL is empty")
+
+    if product_type not in _PRODUCT_TYPES:
+        errors.append(
+            f"Product type '{product_type}' is not valid "
+            f"(must be one of: {', '.join(sorted(_PRODUCT_TYPES))})"
+        )
+
+    return errors
+
+
+@tool
+def publish_product(
+    slug: str,
+    name: str,
+    description: str,
+    price: str,
+    image: str,
+    printful_url: str,
+    product_type: str,
+) -> str:
+    """Publish a product page directly to master (no PR).
+
+    Writes a product markdown file to site/src/data/products/{slug}.md so the
+    shop page picks it up on the next site build. Runs pre-flight validation
+    before committing.
+
+    Args:
+        slug: URL-friendly product slug (e.g., 'suffer-smile-repeat-sticker')
+        name: Product display name (e.g., 'Suffer. Smile. Repeat. Sticker')
+        description: Product description (1-2 sentences)
+        price: Product price as a string (e.g., '14.99')
+        image: Full URL to the product image
+        printful_url: Full URL to the Printful store listing
+        product_type: One of: sticker, mug, pin, print, poster, t-shirt
+    """
+    errors = _validate_product(
+        slug, name, description, price, image, printful_url, product_type,
+    )
+    if errors:
+        bullet_list = "\n".join(f"- {e}" for e in errors)
+        return f"PUBLISH BLOCKED - pre-flight checks failed:\n{bullet_list}"
+
+    added_date = date.today().isoformat()
+    price_float = float(price)
+
+    safe_name = name.replace('"', '\\"')
+    safe_desc = description.replace('"', '\\"')
+    file_content = f"""---
+name: "{safe_name}"
+description: "{safe_desc}"
+price: {price_float}
+image: "{image}"
+printful_url: "{printful_url}"
+product_type: "{product_type}"
+status: "active"
+addedDate: {added_date}
+---
+"""
+
+    file_path = f"site/src/data/products/{slug}.md"
+
+    with httpx.Client(headers=_headers(), timeout=30) as client:
+        encoded = base64.b64encode(file_content.encode()).decode()
+        resp = client.put(
+            _repo_url(f"contents/{file_path}"),
+            json={
+                "message": f"feat: add product '{name}'",
+                "content": encoded,
+                "branch": "master",
+            },
+        )
+        resp.raise_for_status()
+        commit_url = resp.json()["commit"]["html_url"]
+
+    return f"Published to master: {commit_url}"

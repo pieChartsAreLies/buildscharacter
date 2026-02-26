@@ -14,7 +14,7 @@ from hobson.tools.obsidian import (
     write_note,
 )
 from hobson.tools.analytics import get_site_stats, get_top_pages, get_top_referrers
-from hobson.tools.git_ops import create_blog_post_pr, list_open_blog_prs, publish_blog_post
+from hobson.tools.git_ops import create_blog_post_pr, list_open_blog_prs, publish_blog_post, publish_product
 from hobson.tools.image_gen import generate_design_image, upload_to_r2
 from hobson.tools.printful import (
     create_store_product,
@@ -96,8 +96,8 @@ _COMMON_TOOLS = [
     get_substack_posts,
 ]
 
-_BOOTSTRAP_GIT_TOOLS = [publish_blog_post, list_open_blog_prs]
-_STEADYSTATE_GIT_TOOLS = [create_blog_post_pr, list_open_blog_prs]
+_BOOTSTRAP_GIT_TOOLS = [publish_blog_post, publish_product, list_open_blog_prs]
+_STEADYSTATE_GIT_TOOLS = [create_blog_post_pr, publish_product, list_open_blog_prs]
 
 
 def _get_tools() -> list:
