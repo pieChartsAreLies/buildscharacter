@@ -175,6 +175,15 @@ class HobsonDB:
                 (request_id,),
             ).fetchone()
 
+    def get_pending_approvals(self) -> list[dict]:
+        """Get all unresolved approval requests."""
+        with self._conn() as conn:
+            return conn.execute(
+                "SELECT request_id, action, reasoning, estimated_cost, created_at "
+                "FROM hobson.approvals WHERE resolved_at IS NULL "
+                "ORDER BY created_at DESC"
+            ).fetchall()
+
     # -- Design generations --
 
     def log_design_generation(

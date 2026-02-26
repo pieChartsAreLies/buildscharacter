@@ -26,7 +26,13 @@ from hobson.tools.printful import (
     upload_design_file,
 )
 from hobson.tools.substack import create_substack_draft, get_substack_posts, publish_substack_draft
-from hobson.tools.telegram import send_alert, send_approval_request, send_message, send_standing_order_proposal
+from hobson.tools.telegram import (
+    get_pending_approvals,
+    send_alert,
+    send_approval_request,
+    send_message,
+    send_standing_order_proposal,
+)
 
 
 def _load_brand_guidelines() -> str:
@@ -79,6 +85,7 @@ _COMMON_TOOLS = [
     send_alert,
     send_approval_request,
     send_standing_order_proposal,
+    get_pending_approvals,
     list_catalog_products,
     get_catalog_product_variants,
     upload_design_file,

@@ -353,3 +353,16 @@ async def send_standing_order_proposal(category: str, proposed_text: str) -> str
         reply_markup=keyboard,
     )
     return f"Standing order proposal sent (ID: {request_id}). Waiting for confirmation."
+
+
+@tool
+def get_pending_approvals() -> str:
+    """Get all pending approval requests that haven't been resolved yet."""
+    pending = _db.get_pending_approvals()
+    if not pending:
+        return "No pending approvals."
+    lines = [f"**{len(pending)} pending approval(s):**"]
+    for a in pending:
+        cost = f" (est. ${a['estimated_cost']})" if a.get("estimated_cost") else ""
+        lines.append(f"- {a['action']}{cost} -- {a['reasoning']} (since {a['created_at']})")
+    return "\n".join(lines)
