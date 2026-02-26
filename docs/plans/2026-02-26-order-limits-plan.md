@@ -655,7 +655,7 @@ def format_held_message(
         f"*Your cost:* ${production_cost:.2f}\n"
         f"*Retail total:* ${retail_total:.2f}\n"
         f"*Items:*\n{item_lines}\n\n"
-        f"Review in Printful dashboard to confirm or cancel."
+        f"[Review in Printful](https://www.printful.com/dashboard/default/orders)"
     )
 
 
@@ -972,6 +972,12 @@ def _process_order(payload: dict):
         )
 
         if result.passed:
+            # Check order status before confirming (idempotency at Printful level)
+            existing = printful.get_order(order_id)
+            if existing and existing.get("status") not in ("draft", "pending"):
+                logger.info("Order %s already in status '%s', skipping confirm", order_id, existing.get("status"))
+                return
+
             # Confirm the order
             confirmed = printful.confirm_order(order_id)
             event_type = "order_confirmed" if confirmed else "error"
@@ -1053,6 +1059,12 @@ async def webhook(request: Request, background_tasks: BackgroundTasks):
         payload = json.loads(body)
     except json.JSONDecodeError:
         return Response(status_code=400, content="Invalid JSON")
+
+    # Only process order_created events
+    event_type = payload.get("type", "")
+    if event_type != "order_created":
+        logger.info("Ignoring webhook event type: %s", event_type)
+        return {"status": "ignored", "reason": f"event type '{event_type}' not handled"}
 
     # Process in background
     background_tasks.add_task(_process_order, payload)
@@ -1337,3 +1349,10 @@ After all tasks are complete, verify end-to-end:
 - **HMAC verification**: Verify that Printful actually sends `X-Printful-Signature` headers with the webhook secret. If they use a different mechanism, adjust `_verify_signature()` accordingly. Check [Printful API docs](https://developers.printful.com/docs/) during implementation.
 - **Draft mode availability**: Verify that Printful's hosted checkout (printful.me / Quick Stores) supports manual order approval. If not, fall back to the cancel-bad-orders approach (keep existing code but swap `confirm_order` for `cancel_order` and invert the rule logic).
 - **Shared credentials**: Order Guard uses the same Printful API key, Telegram bot token, and PostgreSQL user as Hobson. No new credentials needed except the webhook secret.
+
+## Adversarial Review Changes
+
+After Gemini adversarial review, three improvements were incorporated:
+1. **Event type filtering**: Webhook handler checks `type` field and only processes `order_created`, ignoring other event types
+2. **Printful dashboard link**: Held-order Telegram notifications include a direct link to the Printful orders dashboard
+3. **Order status check before confirming**: Calls `get_order()` to verify the order is still in draft/pending status before attempting to confirm, preventing double-confirmation on retries
