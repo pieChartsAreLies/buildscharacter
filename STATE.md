@@ -106,12 +106,28 @@ Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggr
   - [x] 38/38 tests passing
   - [x] Deployed to CT 255, service restarted
 
+- [x] Order Guard (Fraud Protection, 2026-02-26)
+  - [x] Fail-closed architecture: Printful holds drafts, service confirms safe orders
+  - [x] FastAPI webhook service on CT 255, port 8100 (18 tests passing)
+  - [x] Three rules: production cost cap ($50), per-item qty (3), hourly velocity (5)
+  - [x] HMAC signature validation, async background processing, idempotent DB writes
+  - [x] PostgreSQL `hobson.order_events` table on CT 201
+  - [x] Telegram notifications for confirmed/held/error orders
+  - [x] Cloudflare Tunnel: `webhooks.buildscharacter.com` -> CT 255:8100 (http2 protocol)
+  - [x] Printful webhook configured for `order_created` events
+  - [x] Systemd services: `order-guard.service` + `cloudflared.service`
+  - [x] Homelab docs updated and published
+  - [ ] Enable "Manually approve orders" in Printful dashboard (REQUIRED for fail-closed)
+  - [ ] Add Uptime Kuma monitor for Order Guard health endpoint
+
 ## Infrastructure
 
 | Component | Location | Status |
 |-----------|----------|--------|
 | Hobson service | CT 255, Loki, 192.168.2.232:8080 | Running (BOOTSTRAP_MODE, 8 jobs, 28 tools) |
-| PostgreSQL schema | CT 201, Freya, hobson schema | Applied (11 tables + checkpointer) |
+| Order Guard | CT 255, Loki, 192.168.2.232:8100 | Running (fail-closed webhook fraud protection) |
+| CF Tunnel (order-guard) | webhooks.buildscharacter.com | Running (http2, 4 connections) |
+| PostgreSQL schema | CT 201, Freya, hobson schema | Applied (11 tables + order_events + checkpointer) |
 | Cloudflare R2 | hobson-designs bucket | Active (3 designs uploaded) |
 | Obsidian vault | 98 - Hobson Builds Character/ | Created (19+ files) |
 | Grafana | CT 180, 192.168.2.180:3000 | Dashboard live (9 panels, anon access) |
@@ -147,9 +163,9 @@ Enforced two-voice split across all content:
 
 ## Next Steps
 
-1. Complete Printful storefront setup (billing done, still need: enable storefront, Stripe, shipping, returns, tax, branding)
-2. Set retail prices in Printful for all 4 products (currently null -- mugs $14.99, t-shirt $24.99)
-3. Monitor tomorrow's morning briefing to verify new Telegram daily digest format
+1. ~~Complete Printful storefront setup~~ Done 2026-02-26. Storefront live, waiting for 2pm design batch to populate stickers.
+2. Set retail prices in Printful for all products
+3. Monitor morning briefing to verify Telegram daily digest format
 4. Set up Cloudflare tunnel for Grafana public dashboard
 5. Watch for threshold notification (10+ posts AND 15+ products), then set BOOTSTRAP_MODE=false and restart
 6. Promote on Reddit/HN once content inventory is built
