@@ -60,3 +60,8 @@ Hobson starts as a monolithic LangGraph agent that adds capabilities incremental
 | 2026-02-26 | Nav renamed: Field Notes / Equipment / Manifesto | Blog -> Field Notes, Shop -> Equipment, About -> Manifesto. Dashboard removed. |
 | 2026-02-26 | Email capture via Formspree ("The Logbook") | Owned audience mechanism. Independent of Substack. AJAX form on homepage. |
 | 2026-02-26 | All old content deleted | 6 blog posts + 2 product files removed. Clean slate for composure brand. Git tag v1.0-humor-legacy preserves old state. |
+| 2026-02-27 | Routes renamed: Journal / Shop / Manifesto | "Field Notes" and "Equipment" were outdoor-coded language. Universal alternatives for broader audience. |
+| 2026-02-27 | Site visual redesign via Lovable prototype | A24/Kinfolk aesthetic: noise + topo textures, alternating dark/light sections, typography-driven, full-bleed hero. Ported from React/Tailwind v3 prototype to Astro/Tailwind v4. |
+| 2026-02-27 | Hobson repositioned: autonomous operator with human oversight | Genuine operational autonomy (picks topics, generates designs, makes tactical decisions). Michael holds strategic direction, editorial veto, brand authority. Governance boundary IS the experiment. |
+| 2026-02-27 | Substack dual-voice structure | Michael 60-70% (strategic frame), Hobson 30-40% (operational report), plus "The Numbers" and "The Cutting Room Floor" sections. 48-hour fallback: Hobson publishes solo if Michael doesn't complete his frame. |
+| 2026-02-27 | Brand/audience widened | No longer outdoor/endurance-only. Targeting anyone who embraces deliberate difficulty: training, parenting, entrepreneurship, creative work, recovery. |
