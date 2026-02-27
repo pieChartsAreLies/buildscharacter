@@ -50,7 +50,7 @@ Growth is not accidental. It is earned through discomfort, repetition, resistanc
 
 1. **buildscharacter.com is a standalone brand.** No mention of Hobson, AI, agents, or automation on the public site. A visitor sees a brand, not an experiment.
 2. **Substack is Michael's professional side project.** It documents the technical build and Hobson's operations. It serves Michael's professional narrative, not the brand. If the brand succeeds, Substack is disposable.
-3. **Subtle footer link only** connects the site to Substack. No CTA, no explanation. Just a quiet text link for the curious.
+3. **No link from brand site to Substack.** The brand site and the AI narrative are completely firewalled. Substack may link to the brand as a case study, but the brand never links back. This prevents the "stolen valor" problem where an endurance audience discovers the author is an AI script.
 4. **Hobson keeps its name internally.** Agent name stays in code, Telegram, and Obsidian. Just not on the public site.
 5. **Instagram handle change** (@hobson_builds_character) deferred to later. Added to to-do list.
 
@@ -77,6 +77,7 @@ Full replacement. New structure:
 **content_pipeline.py:**
 - Topic selection broadens from "hiking/running/cold exposure humor" to "deliberate difficulty" (training, building, creating, raising, enduring). Still outdoor-weighted Phase 1.
 - Voice instructions: measured, calm, direct. Understatement carries authority. Write as if you've already done the miles.
+- **Hallucination guardrails:** Never use first-person pronouns (I, me, my) to describe physical events. Frame observations objectively or in second person ("you"). Do not invent fictional anecdotes or fake personal experiences. The voice has earned authority without needing a fabricated backstory.
 - No AI references (unchanged).
 - Remove Substack CTA from generated posts.
 
@@ -105,35 +106,45 @@ Full replacement. New structure:
 - Hero headline: "Builds Character"
 - Hero subline: "Thank Yourself Later." (lighter weight)
 - Hero body: "For people who choose the hard way on purpose." or similar
-- CTAs: "Read" / "Shop"
+- CTAs: "Field Notes" / "Equipment"
 - Latest posts section: stays (updated styling)
-- Substack CTA section: removed entirely
+- Substack CTA section: replaced with brand-aligned email capture ("The Logbook" or "Dispatch"). Lightweight form service (Resend or Formspree). Independent of Substack. This is the owned audience-capture mechanism.
 
-**about.astro:**
+**about.astro -> manifesto.astro:**
+- Page renamed from "About" to "Manifesto" (or "The Standard"). Nav link updated.
 - Becomes brand manifesto. No AI explainer, no Hobson, no "what is this agent."
 - Brand statement, positioning, philosophy, "Thank Yourself Later" meaning.
 - Can include the philosophical frame ("not about mileage, it's about time").
 
-**shop.astro:**
+**shop.astro -> equipment.astro:**
+- Page renamed from "Shop" to "Equipment". Nav link updated.
 - Tagline: "Designed for people who choose the hard way." or similar
 - Empty state: remove Hobson reference
 - Product grid and filters: unchanged
 
 **Base.astro (layout/nav/footer):**
+- Navigation links: Field Notes, Equipment, Manifesto (renamed from Blog, Shop, About)
 - Remove Substack from main navigation
 - Remove Dashboard from main navigation
-- Footer: "Builds Character" + copyright + subtle "How this was built" text link to Substack
+- Footer: "Builds Character" + copyright. No Substack link. No AI references.
 - Remove "Built (and occasionally broken) by Hobson, an AI agent"
+- Update `<title>`, `<meta name="description">`, and Open Graph tags to match new brand voice
+- Regenerate OG images in charcoal/bone aesthetic
 
-**dashboard.astro:**
-- Delete page entirely. Metrics published on Substack instead.
+**dashboard.astro -> Repurposed as "Effort Ledger":**
+- Rename from "Dashboard" to "Effort Ledger" (or "Telemetry")
+- Reframe from agent operations metrics to brand-aligned data visualization
+- Visualize compounding effort: content published over time, design output cadence, operational uptime
+- Fits the "dry, direct, engineered" aesthetic. Data visualization differentiates the brand.
+- Strip any Hobson/AI references from the display. Present data abstractly.
+- Note: still requires Cloudflare tunnel for public access (Grafana on CT 180 is local-only). Deferred if tunnel setup is not ready.
 
 **global.css:**
 - Verify/adjust charcoal and offwhite values
 - Add forest green as CSS variable
 - Adjust burnt rust (more muted than current --color-rust)
 - Add muted technical red (sparingly)
-- Typography: Inter/Space Grotesk/JetBrains Mono likely work as-is (clean geometric sans serif). Verify tracking on all-caps display text.
+- Typography: Space Grotesk (display/headers) + Inter (body). Remove JetBrains Mono from public site (signals "coder/tech," hints at AI backend). Verify tracking on all-caps display text.
 
 ### 5. Content Reset
 
@@ -143,7 +154,7 @@ Full replacement. New structure:
 **Product markdown files:** Delete all.
 - fueled-by-caffeine-poor-decisions-sticker.md, my-legs-say-no-my-gps-says-yes-sticker.md, and others
 
-**Printful catalog:** Remove all products (4 currently). Clean slate for new designs.
+**Printful catalog:** Remove all products via Printful API first, then delete local markdown files. API-first ordering prevents orphaned products in Printful. Clean slate for new designs.
 
 ### 6. Obsidian Updates
 
@@ -157,7 +168,16 @@ Full replacement. New structure:
 
 **Design Concepts:** Clear existing concepts for fresh start.
 
-### 7. Brand Name
+### 7. URL Redirects
+
+Add `_redirects` file (Cloudflare Pages format) routing all deleted blog post and product URLs to the homepage. Prevents 404s and preserves any minimal domain authority.
+
+Old URLs to redirect:
+- /blog/hello-world, /blog/rain-day-three, /blog/gear-suffering-style, /blog/parenting-builds-character, /blog/type-2-fun-addiction, /blog/cold-plunge-lies
+- /shop/fueled-by-caffeine-poor-decisions-sticker, /shop/my-legs-say-no-my-gps-says-yes-sticker, and others
+- /dashboard (deleted page)
+
+### 8. Brand Name
 
 "Build Character" (current, from Feb 25 rebrand) reverts to "Builds Character" across all references in code, site, prompts, and configurations.
 
@@ -175,6 +195,24 @@ Full replacement. New structure:
 - Substack dispatch workflow structure (voice changes, sections stay)
 - Domain: buildscharacter.com
 - GitHub repo: pieChartsAreLies/buildscharacter
+
+## Gemini Adversarial Review (2026-02-26)
+
+Reviewed by Gemini 3.1 Pro. Incorporated findings:
+
+- **[CRITICAL] Authenticity firewall:** Removed footer Substack link entirely. Brand site never links to AI narrative.
+- **[CRITICAL] Hallucination guardrails:** Added explicit constraints against first-person invented anecdotes in content prompts.
+- **[IMPORTANT] Email capture:** Added brand-aligned email list ("The Logbook") to replace Substack CTA as owned audience mechanism.
+- **[IMPORTANT] 404 redirects:** Added `_redirects` file for deleted content URLs.
+- **[IMPORTANT] OG/SEO metadata:** Added metadata update to site overhaul scope.
+- **[IMPORTANT] Printful teardown ordering:** API-first deletion before removing local files.
+- **[CONSIDER] Dashboard repurposed:** "Effort Ledger" data visualization instead of deletion.
+- **[CONSIDER] JetBrains Mono removed:** Signals coder/tech, hints at AI backend.
+- **[CONSIDER] Nav renamed:** Field Notes / Equipment / Manifesto.
+
+Declined:
+- Token bloat optimization (not needed at current scale)
+- Merch pivot to functional goods (staying with POD for now, may revisit)
 
 ## Deferred Items
 
