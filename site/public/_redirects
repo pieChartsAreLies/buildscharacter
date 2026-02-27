@@ -1,21 +1,23 @@
-# Old blog posts -> field notes
-/blog/hello-world /field-notes 301
-/blog/rain-day-three /field-notes 301
-/blog/gear-suffering-style /field-notes 301
-/blog/parenting-builds-character /field-notes 301
-/blog/type-2-fun-addiction /field-notes 301
-/blog/cold-plunge-lies /field-notes 301
+# Old blog posts -> journal
+/blog/hello-world /journal 301
+/blog/rain-day-three /journal 301
+/blog/gear-suffering-style /journal 301
+/blog/parenting-builds-character /journal 301
+/blog/type-2-fun-addiction /journal 301
+/blog/cold-plunge-lies /journal 301
 
-# Old blog index -> field notes
-/blog /field-notes 301
-/blog/ /field-notes 301
+# Old blog index -> journal
+/blog /journal 301
+/blog/ /journal 301
 
-# Old shop -> equipment
-/shop /equipment 301
-/shop/ /equipment 301
+# Field notes -> journal
+/field-notes /journal 301
+/field-notes/ /journal 301
+/field-notes/* /journal/:splat 301
 
-# Old product pages -> equipment
-/shop/* /equipment 301
+# Equipment -> shop
+/equipment /shop 301
+/equipment/ /shop 301
 
 # Old about -> manifesto
 /about /manifesto 301
