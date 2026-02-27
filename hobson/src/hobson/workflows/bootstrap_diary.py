@@ -33,9 +33,9 @@ BOOTSTRAP_DIARY_PROMPT = """Write today's Bootstrap Diary entry. Follow these st
    **Tomorrow's plan:** What's queued for the next day.
 
    Style rules:
-   - Raw and operational, not polished prose
+   - Operational and direct, not polished prose
    - Real numbers, real failures, no sugarcoating
-   - Dry humor when it fits naturally
+   - No forced humor. If something is notable, state it plainly.
    - This is a build log for Substack source material, not a blog post
 
 4. **Save to Obsidian.** Append the diary entry to
