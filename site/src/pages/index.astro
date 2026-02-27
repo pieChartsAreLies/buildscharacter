@@ -10,36 +10,38 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 <Base title="Home">
   <!-- Hero -->
   <section class="py-16 text-center">
-    <h1 class="font-display text-5xl font-bold tracking-tight mb-4">
-      It Builds Character
+    <h1 class="font-display text-5xl font-bold tracking-widest mb-4">
+      BUILDS CHARACTER
     </h1>
-    <p class="text-xl text-slate max-w-2xl mx-auto mb-8">
-      Celebrating the universal experience of doing hard things.
-      Making suffering funny, shareable, and wearable.
+    <p class="text-lg text-slate max-w-2xl mx-auto mb-2">
+      Thank Yourself Later.
+    </p>
+    <p class="text-slate max-w-2xl mx-auto mb-8">
+      For people who choose the hard way on purpose.
     </p>
     <div class="flex gap-4 justify-center">
       <a
-        href="/blog"
+        href="/field-notes"
         class="bg-rust text-offwhite px-6 py-3 font-medium hover:bg-rust/90 transition-colors"
       >
-        Read the Blog
+        Field Notes
       </a>
       <a
-        href="/shop"
+        href="/equipment"
         class="border border-charcoal px-6 py-3 font-medium hover:bg-charcoal hover:text-offwhite transition-colors"
       >
-        Shop Merch
+        Equipment
       </a>
     </div>
   </section>
 
-  <!-- Latest Posts -->
+  <!-- Recent Posts -->
   {posts.length > 0 && (
     <section class="py-12">
-      <h2 class="font-display text-2xl font-bold mb-8">Latest from the Blog</h2>
+      <h2 class="font-display text-2xl font-bold mb-8">Recent</h2>
       <div class="grid gap-8 md:grid-cols-3">
         {posts.map((post) => (
-          <a href={`/blog/${post.id}`} class="group">
+          <a href={`/field-notes/${post.id}`} class="group">
             <article class="border border-charcoal/10 p-6 hover:border-rust/40 transition-colors h-full">
               <time class="text-sm text-slate">
                 {post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -57,19 +59,38 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
     </section>
   )}
 
-  <!-- Substack CTA -->
+  <!-- Email Capture -->
   <section class="py-12 border-t border-charcoal/10">
     <div class="text-center">
-      <h2 class="font-display text-2xl font-bold mb-3">Follow the Experiment</h2>
+      <h2 class="font-display text-2xl font-bold mb-3">The Logbook</h2>
       <p class="text-slate mb-6 max-w-lg mx-auto">
-        Hobson publishes a weekly Substack with real numbers, real failures, and the occasional joke that lands.
+        Periodic dispatches on effort, discipline, and the long game.
       </p>
-      <a
-        href="https://buildscharacter.substack.com"
-        class="bg-charcoal text-offwhite px-6 py-3 font-medium hover:bg-charcoal/80 transition-colors inline-block"
-      >
-        Subscribe on Substack
-      </a>
+      <form id="logbook-form" class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+        <input type="email" name="email" placeholder="your@email.com" required class="flex-1 px-4 py-3 border border-charcoal/20 bg-cream text-charcoal placeholder:text-slate/50 focus:outline-none focus:border-rust" />
+        <button type="submit" class="bg-charcoal text-offwhite px-6 py-3 font-medium hover:bg-charcoal/80 transition-colors">Subscribe</button>
+      </form>
+      <p id="logbook-thanks" class="text-slate mt-4 hidden">Noted.</p>
     </div>
   </section>
+
+  <script>
+    document.getElementById('logbook-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = new FormData(form);
+      try {
+        await fetch('https://formspree.io/f/PLACEHOLDER', {
+          method: 'POST', body: data,
+          headers: { 'Accept': 'application/json' },
+        });
+        form.classList.add('hidden');
+        document.getElementById('logbook-thanks').classList.remove('hidden');
+      } catch {
+        form.classList.add('hidden');
+        document.getElementById('logbook-thanks').textContent = 'Something went wrong. Try again later.';
+        document.getElementById('logbook-thanks').classList.remove('hidden');
+      }
+    });
+  </script>
 </Base>
