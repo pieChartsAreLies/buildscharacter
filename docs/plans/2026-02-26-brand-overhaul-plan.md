@@ -10,6 +10,21 @@
 
 **Design doc:** `docs/plans/2026-02-26-brand-overhaul-design.md`
 
+**Gemini review incorporated:** Task reordering (Printful teardown before file deletion), git tag for rollback insurance, Astro content collection verification, empty collection handling, AJAX form submission.
+
+---
+
+### Task 0: Tag current state for rollback
+
+**Step 1: Tag the repo**
+
+```bash
+cd /Users/llama/Development/builds-character
+git tag v1.0-humor-legacy
+```
+
+This preserves the current brand state. If the pivot needs to be reversed, `git checkout v1.0-humor-legacy` restores everything.
+
 ---
 
 ### Task 1: Replace brand guidelines
@@ -606,8 +621,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
         Periodic dispatches on effort, discipline, and the long game.
       </p>
       <form
-        action="https://formspree.io/f/PLACEHOLDER"
-        method="POST"
+        id="logbook-form"
         class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto"
       >
         <input
@@ -624,6 +638,28 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
           Subscribe
         </button>
       </form>
+      <p id="logbook-thanks" class="text-slate mt-4 hidden">Noted.</p>
+
+      <script>
+        document.getElementById('logbook-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const form = e.target;
+          const data = new FormData(form);
+          try {
+            await fetch('https://formspree.io/f/PLACEHOLDER', {
+              method: 'POST',
+              body: data,
+              headers: { 'Accept': 'application/json' },
+            });
+            form.classList.add('hidden');
+            document.getElementById('logbook-thanks').classList.remove('hidden');
+          } catch {
+            form.classList.add('hidden');
+            document.getElementById('logbook-thanks').textContent = 'Something went wrong. Try again later.';
+            document.getElementById('logbook-thanks').classList.remove('hidden');
+          }
+        });
+      </script>
     </div>
   </section>
 </Base>
@@ -759,10 +795,11 @@ git commit -m "Replace Shop page with Equipment page"
 
 ---
 
-### Task 11: Rename blog routes to field-notes
+### Task 11: Rename blog routes to field-notes and verify Astro collections
 
 **Files:**
 - Rename: `site/src/pages/blog/` -> `site/src/pages/field-notes/`
+- Check: `site/src/content.config.ts` (or `content/config.ts`)
 
 **Step 1: Rename the directory**
 
@@ -774,7 +811,19 @@ mv site/src/pages/blog site/src/pages/field-notes
 
 Check `[...slug].astro` and `index.astro` inside field-notes/ for any hardcoded `/blog/` references and update to `/field-notes/`.
 
-**Step 3: Commit**
+**Step 3: Verify Astro content collection config**
+
+Check `content.config.ts` for how content collections are defined. The `getCollection('blog')` calls in index.astro and the blog listing page reference the collection name, which maps to the `src/data/blog/` directory. The data directory stays the same (only page routes changed), so `getCollection('blog')` should still work. Verify this.
+
+If the content collection is configured by directory name, ensure `blog` still resolves to `src/data/blog/`. The page route `/field-notes/` is separate from the content collection name.
+
+**Step 4: Verify empty collection handling**
+
+After deleting all blog posts (Task 12), the `[...slug].astro` dynamic route will have zero entries. Verify that `getStaticPaths` handles an empty collection gracefully (returns empty array, doesn't throw). Check the index page already conditionally renders (`posts.length > 0`).
+
+If `[...slug].astro` uses `getStaticPaths` and the collection is empty, Astro should just generate zero pages. Verify with a test build after Task 12.
+
+**Step 5: Commit**
 
 ```bash
 git add site/src/pages/field-notes/
@@ -784,7 +833,39 @@ git commit -m "Rename blog routes to field-notes"
 
 ---
 
-### Task 12: Delete old content and products
+### Task 12: Printful product teardown (BEFORE local file deletion)
+
+**Files:**
+- None (API operation)
+
+**Step 1: List current Printful products**
+
+SSH to CT 255 and use the Printful API to list all current products:
+
+```bash
+ssh root@192.168.2.16
+pct exec 255 -- bash -c 'source /root/builds-character/.env && curl -s -H "Authorization: Bearer $PRINTFUL_API_KEY" https://api.printful.com/store/products | python3 -m json.tool'
+```
+
+Note: There should be 4 products. Verify the count matches.
+
+**Step 2: Delete each product via API**
+
+For each product ID returned, delete it:
+
+```bash
+pct exec 255 -- bash -c 'source /root/builds-character/.env && curl -s -X DELETE -H "Authorization: Bearer $PRINTFUL_API_KEY" https://api.printful.com/store/products/<ID>'
+```
+
+Alternative: If only 4 products, manual deletion via Printful dashboard may be faster.
+
+**Step 3: Verify catalog is empty**
+
+Re-run the list command to confirm zero products.
+
+---
+
+### Task 13: Delete old content and products (local files)
 
 **Files:**
 - Delete: `site/src/data/blog/hello-world.md`
@@ -817,7 +898,7 @@ git commit -m "Remove all old blog posts and product files for brand reset"
 
 ---
 
-### Task 13: Delete dashboard page and add redirects
+### Task 14: Delete dashboard page and add redirects
 
 **Files:**
 - Delete: `site/src/pages/dashboard.astro`
@@ -872,7 +953,7 @@ git commit -m "Delete dashboard page and add URL redirects for old routes"
 
 ---
 
-### Task 14: Update git_ops.py references
+### Task 15: Update git_ops.py references
 
 **Files:**
 - Modify: `hobson/src/hobson/tools/git_ops.py`
@@ -902,7 +983,7 @@ git commit -m "Update git_ops references for brand reset"
 
 ---
 
-### Task 15: Update Obsidian Standing Orders
+### Task 16: Update Obsidian Standing Orders
 
 **Files:**
 - Remote: Obsidian vault at `98 - Hobson Builds Character/Operations/Standing Orders.md` (via REST API)
@@ -930,7 +1011,7 @@ This is an Obsidian vault change, not a git change. Log in the daily log that St
 
 ---
 
-### Task 16: Update Obsidian Content Calendar
+### Task 17: Update Obsidian Content Calendar
 
 **Files:**
 - Remote: Obsidian vault at `98 - Hobson Builds Character/Content/Blog/Content Calendar.md`
@@ -958,7 +1039,7 @@ Remove or archive existing concept notes in `98 - Hobson Builds Character/Conten
 
 ---
 
-### Task 17: Run full test suite and deploy
+### Task 18: Run full test suite and deploy
 
 **Files:**
 - None (verification only)
@@ -1012,34 +1093,6 @@ Check buildscharacter.com in browser:
 **Step 6: Commit any final fixes**
 
 If anything needs adjustment after deployment, fix and commit.
-
----
-
-### Task 18: Printful product teardown
-
-**Files:**
-- None (API operation)
-
-**Step 1: List current Printful products**
-
-SSH to CT 255 and use the Printful API to list all current products:
-
-```bash
-ssh root@192.168.2.16
-pct exec 255 -- bash -c 'source /root/builds-character/.env && curl -s -H "Authorization: Bearer $PRINTFUL_API_KEY" https://api.printful.com/store/products | python3 -m json.tool'
-```
-
-**Step 2: Delete each product via API**
-
-For each product ID returned, delete it:
-
-```bash
-pct exec 255 -- bash -c 'source /root/builds-character/.env && curl -s -X DELETE -H "Authorization: Bearer $PRINTFUL_API_KEY" https://api.printful.com/store/products/<ID>'
-```
-
-**Step 3: Verify catalog is empty**
-
-Re-run the list command to confirm zero products.
 
 ---
 
