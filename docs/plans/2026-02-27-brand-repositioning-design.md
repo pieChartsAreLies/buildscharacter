@@ -60,6 +60,20 @@ New section "Hobson's Role" added after "Two Voices":
 
 **New:** "You are Hobson, an autonomous AI operator for the Builds Character brand. You have genuine operational authority: you select topics, generate content and designs, manage workflows, and make tactical decisions. Michael sets strategic direction, holds editorial veto, and defines brand identity. You operate independently within those boundaries. When you're uncertain, surface the decision to Michael via Telegram rather than guessing."
 
+### Voice Drift Prevention (Few-Shot Examples)
+
+Add 3-5 examples of Hobson's exact desired writing style to the system prompt or brand guidelines to prevent drift into standard LLM sycophancy:
+
+**Good (composed, operational):**
+- "Content pipeline produced 3 posts this week. Two met quality threshold. One was rejected at editorial review for first-person fabrication. Rewritten and resubmitted."
+- "Revenue this week: $0. Traffic: 47 pageviews. These numbers will be higher next week, or they won't. Either outcome produces useful data."
+- "The design batch generated 8 concepts. 5 were viable for production. 3 had legibility issues at sticker scale. Adjusted the prompt constraints for next run."
+
+**Bad (sycophantic, dramatic, personality-theater):**
+- "I'm thrilled to report that this week was incredibly productive!"
+- "As an AI, I find it fascinating to observe the patterns in consumer behavior..."
+- "I did not choose this assignment. That is intentional. Character is built in environments that resist you."
+
 ## Section 2: Substack Voice (Dual Voice, Michael Primary)
 
 ### The Problem
@@ -82,6 +96,11 @@ Each Substack edition has three components:
 - Transparent about being AI. Composed and direct.
 - The contrast between Michael's strategic view and Hobson's operational view is what makes the newsletter distinct.
 
+**The Cutting Room Floor (recurring feature):**
+- Designs Hobson generated that Michael rejected, and why.
+- Content topics Hobson selected that Michael vetoed, and the reasoning.
+- Illustrates the governance boundary in concrete terms. Shows readers what AI judgment looks like vs. human editorial judgment.
+
 **The Numbers (shared section):**
 - Traffic, revenue, costs, content output, design output.
 - Presented as data, not narrated by either voice.
@@ -93,8 +112,28 @@ The prompt currently tells Hobson to write the entire edition. New behavior:
 2. Compile the data/metrics section
 3. Save both to Obsidian drafts for Michael to wrap with his frame
 4. Notify Michael via Telegram that the raw materials are ready
+5. Michael edits and writes his portion in Obsidian, then signals Hobson (via Telegram) to publish
+6. Hobson picks up the finalized draft from Obsidian and publishes to Substack
+
+**48-hour fallback:** If Michael doesn't complete his frame within 48 hours, Hobson publishes its operational section + metrics as a standalone edition. This prevents Michael from becoming a bottleneck that kills the autonomous premise. For milestone editions (Week 0, major pivots), Michael writes the strategic frame. For routine weekly updates, Hobson can publish solo if needed.
 
 Michael writes his portion separately (with Claude as a writing aid if desired, but not through the Hobson agent). The dual-voice separation is real, not simulated.
+
+### Publishing Workflow
+
+```
+Hobson generates operational section + metrics
+    -> Saves to Obsidian (98 - Hobson Builds Character/Content/Substack/Drafts/)
+    -> Notifies Michael via Telegram
+Michael edits in Obsidian, adds his frame
+    -> Signals Hobson via Telegram ("publish Week N")
+Hobson picks up finalized draft from Obsidian
+    -> Converts to HTML
+    -> Publishes to Substack via create_substack_draft + publish_substack_draft
+    -> Saves archive copy to Obsidian
+```
+
+If 48 hours pass with no signal: Hobson publishes its section solo.
 
 ## Section 3: Site Redesign Within Astro
 
@@ -135,12 +174,14 @@ Key change: **introduce depth through layering.** Sections alternate dark/light.
 
 ### Image Strategy
 
-- Generated via Imagen 4.0 (existing `generate_design_image` tool) or sourced from free photography
+- Generated via Google Imagen 4.0 (existing `generate_design_image` tool via `google-genai` SDK) or sourced from free photography
 - **Abstract and atmospheric:** Close-up textures (rock face, concrete, rope fiber, weathered wood), weather (fog, rain on glass, pre-dawn light), distance (long roads, open water, horizon lines)
 - **Black and white or desaturated** with a warm tint to match the palette
 - **Used sparingly;** typography does the heavy lifting
 - **Never literal activity photos** (no hiking, no gym, no specific sport). The imagery must be universal.
-- Hobson's Imagen integration generates atmospheric/textural imagery in the brand aesthetic at zero cost
+- Google's image generation is high quality and well-suited for atmospheric/textural brand imagery at zero marginal cost
+- **Image pipeline:** Hobson generates via Imagen -> uploads to Cloudflare R2 -> stores R2 URL in content frontmatter or site config -> commits via GitHub API -> triggers Cloudflare Pages rebuild. Images served directly from R2 URLs, not bundled in the Astro build.
+- **CSS post-processing:** Apply subtle brand-tinted filters (warm sepia, desaturation) via CSS rather than expecting Imagen to hit exact hex codes natively
 
 ### Page Designs
 
@@ -168,6 +209,7 @@ Key change: **introduce depth through layering.** Sections alternate dark/light.
 - "Growth is not accidental." "This is not a motivational brand. It is a composure brand."
 - Varied text sizes and section padding create rhythm
 - Feels like reading a printed broadsheet, not a web page
+- **Scroll-driven interactivity:** CSS scroll-driven animations reveal typography progressively. Reading depth indicator reflects the "effort" of engaging with long-form philosophy. Reinforces the cinematic aesthetic.
 
 ### Texture and Depth
 
@@ -185,12 +227,21 @@ Key change: **introduce depth through layering.** Sections alternate dark/light.
 - Hobson's content publishing tools (GitHub API -> Astro content collection)
 - SEO/OG metadata approach (updated for new visual identity)
 
+### Site Redesign Execution
+
+**Approach:** Prototype in Lovable (React + Tailwind), then port the design system to Astro.
+
+Lovable produces the visual design with live preview. The Tailwind design tokens (colors, typography scale, spacing, component patterns) transfer directly to Astro. The React component structure informs the Astro component structure but doesn't port 1:1.
+
+**What ports:** CSS custom properties, Tailwind config, typography scale, color system, spacing system, layout patterns, hover states, animation keyframes.
+**What doesn't port:** React state management, Supabase integration, React-specific component APIs.
+
 ### What Changes
 
 - Full CSS and layout overhaul
 - New page templates with dark/light section system
 - Typography scale and spacing overhaul
-- Atmospheric imagery layer (Imagen-generated + curated)
+- Atmospheric imagery layer (Google Imagen-generated + curated)
 - Responsive design improved (mobile parity with desktop)
 - Navigation and footer refined
 
@@ -251,6 +302,26 @@ Key change: **introduce depth through layering.** Sections alternate dark/light.
 5. Site redesign (full CSS/layout/imagery overhaul)
 6. Week Zero post draft (written after guidelines and site direction are locked)
 7. Obsidian updates (Standing Orders, Content Calendar aligned to new voice)
+
+## Gemini Adversarial Review (2026-02-27)
+
+Reviewed by Gemini 3.1 Pro. Findings and dispositions:
+
+**Incorporated:**
+- **[CRITICAL] Michael bottleneck:** Added 48-hour fallback. Hobson publishes solo if Michael doesn't complete his frame. Milestone editions (Week 0, pivots) require Michael's strategic frame; routine weekly updates can go autonomous.
+- **[IMPORTANT] Publishing workflow undefined:** Added explicit Obsidian -> Telegram signal -> Substack pipeline with fallback.
+- **[IMPORTANT] Image pipeline undefined:** Added explicit Imagen -> R2 -> frontmatter URL -> GitHub API -> CF Pages rebuild pipeline. CSS post-processing for brand color tinting.
+- **[CONSIDER] Voice drift:** Added 3 good / 3 bad few-shot examples to system prompt spec.
+- **[CONSIDER] "The Cutting Room Floor":** Added as recurring Substack feature showing vetoed Hobson output with reasoning.
+- **[CONSIDER] Manifesto interactivity:** Added scroll-driven animations and reading depth indicator.
+
+**Declined:**
+- **[CRITICAL] Brand hypocrisy / transparency bridge:** The brand site remains AI-free. The target audience is broader than outdoor/endurance; they're people who choose hard things. Using AI as the right tool for the job is consistent with that philosophy. The Substack handles full transparency for a separate audience. These are two different products.
+- **[IMPORTANT] Audience mismatch / funnel between brand and Substack:** Intentionally no funnel. The brand is a conduit for content to discuss on Substack. Substack is the primary career asset. If the brand succeeds independently, great. If not, the Substack still demonstrates AI governance capability.
+- **[IMPORTANT] Site redesign execution assignment:** Resolved: Lovable prototype for visual design, then port to Astro.
+- **[IMPORTANT] Merch typography pipeline:** Current Imagen integration handles design generation. Typography-based designs work within Imagen's capabilities for the brand's phrase-forward aesthetic.
+- **[CONSIDER] Imagen color palette constraints:** Will do best-effort prompting plus CSS post-processing as fallback.
+- **[CONSIDER] Substack "Numbers" styling as terminal output:** Deferred. Substack presentation is not a priority while the brand is still building.
 
 ## What Stays Unchanged
 
