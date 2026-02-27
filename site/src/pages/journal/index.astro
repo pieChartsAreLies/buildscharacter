@@ -1,0 +1,80 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const featured = posts[0];
+const rest = posts.slice(1);
+---
+
+<Base title="Journal" description="Observations on effort, discipline, and the long game.">
+  <!-- Header -->
+  <section class="bg-charcoal noise-overlay py-16 md:py-24 px-6 md:px-12 pt-28 md:pt-32">
+    <div class="max-w-6xl mx-auto">
+      <h1 class="font-display text-bone text-4xl md:text-6xl lg:text-7xl font-bold tracking-wide uppercase">
+        Journal
+      </h1>
+      <p class="text-bone/50 mt-4 text-sm md:text-base tracking-wide">
+        Observations on effort, discipline, and the long game.
+      </p>
+    </div>
+  </section>
+
+  <!-- Featured -->
+  {featured && (
+    <section class="bg-bone py-16 md:py-20 px-6 md:px-12">
+      <div class="max-w-6xl mx-auto">
+        <div class="scroll-reveal">
+          <a href={`/journal/${featured.id}`} class="group block border-l-4 border-rust pl-8 md:pl-12 py-4">
+            {featured.data.tags?.length > 0 && (
+              <span class="inline-block text-xs tracking-widest uppercase text-forest font-medium mb-3">
+                {featured.data.tags[0]}
+              </span>
+            )}
+            <h2 class="font-display text-charcoal text-3xl md:text-5xl font-bold mb-4 group-hover:text-rust transition-colors duration-300">
+              {featured.data.title}
+            </h2>
+            <p class="text-muted leading-reading reading-width text-base md:text-lg mb-4">
+              {featured.data.description}
+            </p>
+            <span class="text-xs tracking-widest uppercase text-muted">
+              {featured.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Grid -->
+  {rest.length > 0 && (
+    <section class="bg-bone pb-20 md:pb-28 px-6 md:px-12">
+      <div class="max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+          {rest.map((post, i) => (
+            <div class="scroll-reveal" data-delay={String(i * 80)}>
+              <a href={`/journal/${post.id}`} class="group block border-l-4 border-warm-gray hover:border-rust pl-6 py-3 transition-all duration-300 hover:-translate-y-1">
+                {post.data.tags?.length > 0 && (
+                  <span class="inline-block text-xs tracking-widest uppercase text-forest font-medium mb-2">
+                    {post.data.tags[0]}
+                  </span>
+                )}
+                <h3 class="font-display text-charcoal text-xl md:text-2xl font-bold mb-2 group-hover:text-rust transition-colors duration-300">
+                  {post.data.title}
+                </h3>
+                <p class="text-muted leading-reading text-sm mb-3">
+                  {post.data.description}
+                </p>
+                <span class="text-xs tracking-widest uppercase text-muted">
+                  {post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                </span>
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+</Base>

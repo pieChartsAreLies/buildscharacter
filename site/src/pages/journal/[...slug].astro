@@ -1,0 +1,55 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+---
+
+<Base title={post.data.title} description={post.data.description}>
+  <!-- Dark header -->
+  <section class="bg-charcoal noise-overlay pt-28 md:pt-32 pb-12 md:pb-16 px-6 md:px-12">
+    <div class="max-w-3xl mx-auto">
+      <div class="flex gap-2 mb-4">
+        {post.data.tags.map((tag: string) => (
+          <span class="text-xs tracking-widest uppercase text-forest font-medium">{tag}</span>
+        ))}
+      </div>
+      <h1 class="font-display text-bone text-3xl md:text-5xl font-bold leading-tight">{post.data.title}</h1>
+      <p class="text-bone/60 mt-4">{post.data.description}</p>
+      <div class="mt-6 text-sm text-bone/40 tracking-wide">
+        <span>{post.data.author}</span>
+        <span class="mx-2">|</span>
+        <time>{post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+      </div>
+    </div>
+  </section>
+
+  <!-- Content -->
+  <section class="bg-bone py-12 md:py-16 px-6 md:px-12">
+    <article class="max-w-3xl mx-auto">
+      <div class="prose max-w-none
+        [&_h2]:font-display [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-10 [&_h2]:mb-4 [&_h2]:text-charcoal
+        [&_h3]:font-display [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:text-charcoal
+        [&_p]:text-charcoal/90 [&_p]:leading-reading [&_p]:mb-4
+        [&_a]:text-rust [&_a]:underline [&_a]:hover:text-rust/80
+        [&_blockquote]:border-l-4 [&_blockquote]:border-rust/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted
+        [&_code]:bg-charcoal/5 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-sm
+        [&_pre]:bg-charcoal [&_pre]:text-bone [&_pre]:p-4 [&_pre]:overflow-x-auto
+        [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4
+        [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4
+        [&_li]:mb-1 [&_li]:text-charcoal/90
+      ">
+        <Content />
+      </div>
+    </article>
+  </section>
+</Base>
