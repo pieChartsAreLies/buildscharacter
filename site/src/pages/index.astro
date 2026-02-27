@@ -8,76 +8,108 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
 ---
 
 <Base title="Home">
-  <!-- Hero -->
-  <section class="py-16 text-center">
-    <h1 class="font-display text-5xl font-bold tracking-widest mb-4">
-      BUILDS CHARACTER
-    </h1>
-    <p class="text-lg text-slate max-w-2xl mx-auto mb-2">
-      Thank Yourself Later.
-    </p>
-    <p class="text-slate max-w-2xl mx-auto mb-8">
-      For people who choose the hard way on purpose.
-    </p>
-    <div class="flex gap-4 justify-center">
-      <a
-        href="/field-notes"
-        class="bg-rust text-offwhite px-6 py-3 font-medium hover:bg-rust/90 transition-colors"
-      >
-        Field Notes
-      </a>
-      <a
-        href="/equipment"
-        class="border border-charcoal px-6 py-3 font-medium hover:bg-charcoal hover:text-offwhite transition-colors"
-      >
-        Equipment
-      </a>
-    </div>
-  </section>
-
-  <!-- Recent Posts -->
-  {posts.length > 0 && (
-    <section class="py-12">
-      <h2 class="font-display text-2xl font-bold mb-8">Recent</h2>
-      <div class="grid gap-8 md:grid-cols-3">
-        {posts.map((post) => (
-          <a href={`/field-notes/${post.id}`} class="group">
-            <article class="border border-charcoal/10 p-6 hover:border-rust/40 transition-colors h-full">
-              <time class="text-sm text-slate">
-                {post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </time>
-              <h3 class="font-display font-bold text-lg mt-2 group-hover:text-rust transition-colors">
-                {post.data.title}
-              </h3>
-              <p class="text-slate mt-2 text-sm">
-                {post.data.description}
-              </p>
-            </article>
-          </a>
-        ))}
-      </div>
-    </section>
-  )}
-
-  <!-- Email Capture -->
-  <section class="py-12 border-t border-charcoal/10">
+  <!-- HERO: full viewport, dark with noise + topo -->
+  <section class="relative min-h-screen flex flex-col items-center justify-center bg-charcoal noise-overlay topo-pattern overflow-hidden px-4">
     <div class="text-center">
-      <h2 class="font-display text-2xl font-bold mb-3">The Logbook</h2>
-      <p class="text-slate mb-6 max-w-lg mx-auto">
-        Periodic dispatches on effort, discipline, and the long game.
+      <h1 class="font-display font-bold text-bone text-[12vw] md:text-[10vw] lg:text-[9vw] leading-[0.9] tracking-mega-wide uppercase">
+        BUILDS<br />CHARACTER
+      </h1>
+      <p class="mt-6 md:mt-8 font-display text-rust text-lg md:text-2xl lg:text-3xl tracking-widest font-light ml-4 md:ml-12">
+        Thank Yourself Later.
       </p>
-      <form id="logbook-form" class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-        <input type="email" name="email" placeholder="your@email.com" required class="flex-1 px-4 py-3 border border-charcoal/20 bg-cream text-charcoal placeholder:text-slate/50 focus:outline-none focus:border-rust" />
-        <button type="submit" class="bg-charcoal text-offwhite px-6 py-3 font-medium hover:bg-charcoal/80 transition-colors">Subscribe</button>
-      </form>
-      <p id="logbook-thanks" class="text-slate mt-4 hidden">Noted.</p>
     </div>
   </section>
 
+  <!-- TRANSITION STRIP -->
+  <section class="bg-charcoal border-t border-bone/10 py-12 md:py-16 px-6">
+    <div class="scroll-reveal">
+      <p class="font-display text-bone/80 text-2xl md:text-4xl lg:text-5xl font-light tracking-wide text-center max-w-4xl mx-auto">
+        Effort compounds.
+      </p>
+    </div>
+  </section>
+
+  <!-- ARTICLES -->
+  <section class="bg-bone py-20 md:py-28 px-6 md:px-12">
+    <div class="max-w-6xl mx-auto">
+      <div class="scroll-reveal">
+        <h2 class="font-display text-charcoal text-xs tracking-ultra-wide uppercase mb-12 font-bold">
+          Recent
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+        <!-- Featured (first post, spans 2 cols) -->
+        {posts[0] && (
+          <div class="scroll-reveal lg:col-span-2">
+            <a href={`/journal/${posts[0].id}`} class="group block">
+              <div class="border-l-4 border-rust pl-6 md:pl-8">
+                <span class="text-xs tracking-widest uppercase text-muted">
+                  {posts[0].data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                </span>
+                <h3 class="font-display text-charcoal text-2xl md:text-3xl lg:text-4xl font-bold mt-3 mb-4 group-hover:text-rust transition-colors duration-300">
+                  {posts[0].data.title}
+                </h3>
+                <p class="text-muted leading-reading reading-width text-base md:text-lg">
+                  {posts[0].data.description}
+                </p>
+              </div>
+            </a>
+          </div>
+        )}
+
+        <!-- Side cards -->
+        <div class="flex flex-col gap-8">
+          {posts.slice(1).map((post, i) => (
+            <div class="scroll-reveal" data-delay={String(i * 100)}>
+              <a href={`/journal/${post.id}`} class="group block">
+                <div class="border-l-4 border-forest pl-6">
+                  <span class="text-xs tracking-widest uppercase text-muted">
+                    {post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                  </span>
+                  <h3 class="font-display text-charcoal text-lg md:text-xl font-bold mt-2 mb-2 group-hover:text-rust transition-colors duration-300">
+                    {post.data.title}
+                  </h3>
+                  <p class="text-muted leading-reading text-sm">
+                    {post.data.description}
+                  </p>
+                </div>
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THE LOGBOOK — EMAIL CAPTURE -->
+  <section class="bg-charcoal noise-overlay py-20 md:py-28 px-6 md:px-12">
+    <div class="max-w-2xl mx-auto text-center">
+      <div class="scroll-reveal">
+        <h2 class="font-display text-bone text-3xl md:text-4xl font-bold tracking-wide mb-4">
+          The Logbook
+        </h2>
+        <p class="text-bone/60 leading-reading mb-10 text-sm md:text-base">
+          Periodic dispatches on effort, discipline, and the long game.
+        </p>
+        <form id="logbook-form" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+          <input type="email" name="email" placeholder="Your email" required
+            class="flex-1 bg-bone/5 border border-bone/15 text-bone placeholder:text-bone/30 px-4 py-3 text-sm tracking-wide focus:outline-none focus:border-rust transition-colors" />
+          <button type="submit"
+            class="bg-rust text-bone font-display text-sm font-bold tracking-widest uppercase px-6 py-3 hover:bg-rust/90 transition-colors duration-300">
+            Subscribe
+          </button>
+        </form>
+        <p id="logbook-thanks" class="text-bone/60 mt-4 hidden">Noted.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Formspree handler (keep PLACEHOLDER) -->
   <script>
-    document.getElementById('logbook-form').addEventListener('submit', async (e) => {
+    document.getElementById('logbook-form')?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const form = e.target;
+      const form = e.target as HTMLFormElement;
       const data = new FormData(form);
       try {
         await fetch('https://formspree.io/f/PLACEHOLDER', {
@@ -85,11 +117,14 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
           headers: { 'Accept': 'application/json' },
         });
         form.classList.add('hidden');
-        document.getElementById('logbook-thanks').classList.remove('hidden');
+        document.getElementById('logbook-thanks')?.classList.remove('hidden');
       } catch {
         form.classList.add('hidden');
-        document.getElementById('logbook-thanks').textContent = 'Something went wrong. Try again later.';
-        document.getElementById('logbook-thanks').classList.remove('hidden');
+        const thanks = document.getElementById('logbook-thanks');
+        if (thanks) {
+          thanks.textContent = 'Something went wrong. Try again later.';
+          thanks.classList.remove('hidden');
+        }
       }
     });
   </script>
