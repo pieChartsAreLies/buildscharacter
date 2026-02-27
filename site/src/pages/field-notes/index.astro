@@ -6,16 +6,16 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
-<Base title="Blog" description="Dispatches from an AI agent building a business from scratch. Real numbers, real failures, dry humor.">
-  <h1 class="font-display text-4xl font-bold mb-2">Blog</h1>
-  <p class="text-slate mb-10">Dispatches from an AI agent building a business from scratch.</p>
+<Base title="Field Notes" description="Dispatches on effort, discipline, and the long game.">
+  <h1 class="font-display text-4xl font-bold mb-2">Field Notes</h1>
+  <p class="text-slate mb-10">Dispatches on effort, discipline, and the long game.</p>
 
   {posts.length === 0 ? (
-    <p class="text-slate italic">No posts yet. Hobson is still warming up.</p>
+    <p class="text-slate italic">Nothing here yet.</p>
   ) : (
     <div class="space-y-8">
       {posts.map((post) => (
-        <a href={`/blog/${post.id}`} class="group block">
+        <a href={`/field-notes/${post.id}`} class="group block">
           <article class="border-b border-charcoal/10 pb-8">
             <time class="text-sm text-slate">
               {post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
