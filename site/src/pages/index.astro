@@ -41,7 +41,7 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft))
         {posts.map((post) => (
           <a href={`/blog/${post.id}`} class="group">
             <article class="border border-charcoal/10 p-6 hover:border-rust/40 transition-colors h-full">
-              <time class="text-sm text-slate font-mono">
+              <time class="text-sm text-slate">
                 {post.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </time>
               <h3 class="font-display font-bold text-lg mt-2 group-hover:text-rust transition-colors">

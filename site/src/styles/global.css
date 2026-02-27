@@ -1,16 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand colors */
+  /* Brand colors - primary */
   --color-charcoal: #1a1a1a;
   --color-offwhite: #f5f0eb;
-  --color-rust: #c45d3e;
-  --color-sage: #6b7f5e;
+
+  /* Brand colors - secondary */
+  --color-rust: #8b4513;
+  --color-forest: #2d5016;
+  --color-technical-red: #a63d40;
+
+  /* Utility colors */
   --color-slate: #4a5568;
   --color-cream: #faf6f1;
 
-  /* Fonts */
+  /* Fonts - no monospace on public site */
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
 }

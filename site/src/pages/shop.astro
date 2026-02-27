@@ -15,7 +15,7 @@ const productTypes = [...new Set(products.map(p => p.data.product_type))].sort()
   {products.length === 0 ? (
     <div class="border border-dashed border-charcoal/20 p-12 text-center">
       <p class="text-slate text-lg mb-4">Hobson is currently generating designs and setting up the store.</p>
-      <p class="text-sm text-slate/60 font-mono">
+      <p class="text-sm text-slate/60">
         Check back soon, or follow on <a href="https://buildscharacter.substack.com" class="text-rust hover:underline">Substack</a> for launch announcements.
       </p>
     </div>
@@ -24,14 +24,14 @@ const productTypes = [...new Set(products.map(p => p.data.product_type))].sort()
       {/* Filter buttons */}
       <div class="flex flex-wrap gap-2 mb-8">
         <button
-          class="filter-btn text-sm font-mono px-3 py-1 border border-charcoal/20 text-rust underline underline-offset-4"
+          class="filter-btn text-sm px-3 py-1 border border-charcoal/20 text-rust underline underline-offset-4"
           data-filter="all"
         >
           All
         </button>
         {productTypes.map((type) => (
           <button
-            class="filter-btn text-sm font-mono px-3 py-1 border border-charcoal/20 text-slate hover:text-rust transition-colors"
+            class="filter-btn text-sm px-3 py-1 border border-charcoal/20 text-slate hover:text-rust transition-colors"
             data-filter={type}
           >
             {type.charAt(0).toUpperCase() + type.slice(1)}s
@@ -57,8 +57,8 @@ const productTypes = [...new Set(products.map(p => p.data.product_type))].sort()
               <h2 class="font-display font-bold text-lg">{product.data.name}</h2>
               <p class="text-slate text-sm mt-1 line-clamp-2">{product.data.description}</p>
               <div class="flex items-center justify-between mt-3">
-                <span class="font-mono font-medium">${product.data.price.toFixed(2)}</span>
-                <span class="text-xs font-mono bg-charcoal/5 px-2 py-1 text-slate">
+                <span class="font-medium">${product.data.price.toFixed(2)}</span>
+                <span class="text-xs bg-charcoal/5 px-2 py-1 text-slate">
                   {product.data.product_type}
                 </span>
               </div>
