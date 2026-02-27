@@ -16,9 +16,10 @@ CONTENT_PIPELINE_PROMPT = """Run the content pipeline. Follow these steps:
    - Is timely or seasonally relevant
    - Fits the theme of DELIBERATE DIFFICULTY: training, building, creating,
      raising, enduring. Anything where someone chose a harder path on purpose.
-   - Phase 1 is outdoor-weighted (trail running, cold exposure, backpacking,
-     endurance events), but the frame is philosophy, not activity. The question
-     is always "why do people choose hard things?" not "here is a gear list."
+   - The audience is anyone who chooses the hard path: athletes, parents,
+     entrepreneurs, creators, students, builders. Not limited to outdoor/endurance.
+     The frame is philosophy, not any single activity. The question is always
+     "why do people choose hard things?" not "here is a gear list."
    - If no topics are planned, generate one based on the brand guidelines
 
 3. **Write the blog post.** Generate a complete blog post:
