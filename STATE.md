@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggressive content cadence (3x/day content, daily designs, daily bootstrap diary). Goal: 10+ blog posts and 15+ Printful products before promoting on Reddit/HN.
+Brand overhaul complete. Pivoted from humor-first "funny suffering" to composure-driven philosophy brand. All content deleted, site redesigned, prompts rewritten, Obsidian updated. Needs deploy to CT 255 and Cloudflare Pages rebuild. Bootstrap Sprint still active (BOOTSTRAP_MODE=true) for new content generation under the composure voice.
 
 ## Status
 
@@ -120,6 +120,30 @@ Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggr
   - [ ] Enable "Manually approve orders" in Printful dashboard (REQUIRED for fail-closed)
   - [ ] Add Uptime Kuma monitor for Order Guard health endpoint
 
+- [x] Brand Overhaul: Composure Pivot (2026-02-26)
+  - [x] Brand guidelines fully replaced (humor -> composure, "Thank Yourself Later" tagline)
+  - [x] Agent system prompt updated (mission + voice)
+  - [x] All 4 workflow prompts rewritten (content_pipeline, design_batch, substack_dispatch, bootstrap_diary)
+  - [x] Site CSS: burnt rust, forest green, removed JetBrains Mono
+  - [x] Layout/nav: Field Notes / Equipment / Manifesto, footer cleaned of AI references
+  - [x] Homepage: "BUILDS CHARACTER" hero, "Thank Yourself Later", email capture ("The Logbook" via Formspree)
+  - [x] Manifesto page (replaced About), Equipment page (replaced Shop)
+  - [x] Blog routes moved to /field-notes/
+  - [x] Dashboard page deleted
+  - [x] All 6 blog posts deleted, all 2 product files deleted
+  - [x] URL redirects: /blog/* -> /field-notes, /shop/* -> /equipment, /about -> /manifesto, /dashboard -> /
+  - [x] git_ops.py: author changed from "Hobson" to "Builds Character"
+  - [x] Obsidian Standing Orders: Organizational Intent rewritten for composure brand
+  - [x] Obsidian Content Calendar: 8 new composure-voice topics, old content archived
+  - [x] Git tag v1.0-humor-legacy preserved for rollback
+  - [x] Design doc: docs/plans/2026-02-26-brand-overhaul-design.md
+  - [x] Implementation plan: docs/plans/2026-02-26-brand-overhaul-plan.md
+  - [x] 38/38 tests passing
+  - [ ] Deploy to CT 255 (git pull + restart hobson service)
+  - [ ] Verify Cloudflare Pages rebuild
+  - [ ] Delete old Printful products (4 existing) via Printful dashboard
+  - [ ] Set up Formspree form and replace PLACEHOLDER in index.astro
+
 ## Infrastructure
 
 | Component | Location | Status |
@@ -144,32 +168,23 @@ Bootstrap Sprint activated. Hobson running in BOOTSTRAP_MODE on CT 255 with aggr
 - GitHub token on CT 255 is a gho_ OAuth token (may expire)
 - Google API key passed explicitly to ChatGoogleGenerativeAI
 - Grafana admin password was reset to temppass123 during setup; change it back and update Bitwarden
-- Grafana dashboard is local-only (192.168.2.180); needs Cloudflare tunnel for public access on buildscharacter.com/dashboard
 - Imagen outputs 1024x1024; auto-upscaled via LANCZOS to meet Printful minimums (e.g., 1500x1500 for stickers)
 - Vision ranking occasionally falls back to first image on API errors (non-blocking)
-- Previous design_generations records (IDs 1-2) have no image_url from early test runs
-
-## Voice Split (2026-02-25)
-
-Enforced two-voice split across all content:
-- **Blog**: Human experience only. Zero AI references. Hobson writes as a lover of hard things.
-- **Substack**: AI transparency, business operations, co-authored with Michael.
-- Removed 3 blog posts (cold-plunge-reality, measuring-humor, week-1-revenue)
-- Rewrote hello-world launch post (brand-focused, not AI-focused)
-- Updated brand_guidelines.md, content_pipeline.py, bootstrap_diary.py, substack_dispatch.py
-- Bootstrap diary no longer publishes to blog (logs to Obsidian for Substack source material)
-- Content calendar cleaned: AI topics moved to Substack section
-- Deployed to CT 255, service restarted
+- Formspree form ID is PLACEHOLDER in index.astro (needs real form created)
+- Old Printful products (4) still exist; need manual deletion from Printful dashboard
 
 ## Next Steps
 
-1. ~~Complete Printful storefront setup~~ Done 2026-02-26. Storefront live, waiting for 2pm design batch to populate stickers.
-2. Set retail prices in Printful for all products
-3. Monitor morning briefing to verify Telegram daily digest format
-4. Set up Cloudflare tunnel for Grafana public dashboard
-5. Watch for threshold notification (10+ posts AND 15+ products), then set BOOTSTRAP_MODE=false and restart
-6. Promote on Reddit/HN once content inventory is built
-7. Restore Grafana admin password and update Bitwarden
-8. Order a test sticker to verify LANCZOS upscale quality on physical product
-9. Write first "From the Operator" Substack section (Michael's perspective on the voice correction)
-10. Design gap: approval callbacks flip DB flag but don't re-trigger workflow (approved work waits for next scheduled run)
+1. Deploy brand overhaul to CT 255 (git pull + restart hobson service)
+2. Verify Cloudflare Pages rebuild (buildscharacter.com reflects new brand)
+3. Delete old Printful products via Printful dashboard
+4. Create Formspree form and replace PLACEHOLDER in site/src/pages/index.astro
+5. Set retail prices in Printful for new products
+6. Monitor morning briefing to verify Telegram daily digest format
+7. Watch for threshold notification (10+ posts AND 15+ products), then set BOOTSTRAP_MODE=false and restart
+8. Promote on Reddit/HN once content inventory is built
+9. Restore Grafana admin password and update Bitwarden
+10. Order a test sticker to verify LANCZOS upscale quality on physical product
+11. Write first "From the Operator" Substack section (Michael's perspective on the brand pivot)
+12. Change Instagram handle (@hobson_builds_character -> @buildscharacter or similar)
+13. Design gap: approval callbacks flip DB flag but don't re-trigger workflow (approved work waits for next scheduled run)

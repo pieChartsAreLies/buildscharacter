@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a profitable, largely autonomous web business on buildscharacter.com (content-driven brand + POD merch), operated by an autonomous AI agent named Hobson built on LangGraph. The Substack newsletter is the primary product; merch and blog are proof-of-work for the narrative. Hobson documents everything transparently in Obsidian and publishes a public Grafana dashboard. The endgame is "The Hobson Playbook," productizing the agent system and learnings.
+Build and operate an endurance-minded philosophy brand on buildscharacter.com for people who choose the hard way on purpose. Composure-driven voice (measured, calm, dry, direct). Operated by an autonomous AI agent (Hobson) built on LangGraph. The brand site is a standalone business; the Substack is a separate technical build log serving Michael's professional narrative. Revenue through POD merch, content, and eventual digital products.
 
 ## Tech Stack
 
@@ -15,7 +15,8 @@ Build a profitable, largely autonomous web business on buildscharacter.com (cont
 - **Human interface:** Telegram bot (approvals, alerts) + PR-based review (content editing)
 - **Documentation:** Obsidian vault (`98 - Hobson Builds Character/`)
 - **Newsletter:** Substack (hobsonbuildscharacter.substack.com)
-- **Analytics:** Umami (self-hosted) + Grafana (public dashboard, CT 180)
+- **Email Capture:** Formspree ("The Logbook")
+- **Analytics:** Cloudflare Analytics + Grafana (CT 180)
 - **Monitoring:** Uptime Kuma (self-hosted)
 - **DNS/CDN:** Cloudflare
 - **Secrets:** Bitwarden
@@ -54,3 +55,8 @@ Hobson starts as a monolithic LangGraph agent that adds capabilities incremental
 | 2026-02-23 | The Hobson Playbook | Endgame product. Capture meta-learnings from day one. |
 | 2026-02-23 | Execution trace logging | Immutable run_log for debugging autonomous operations |
 | 2026-02-23 | Programmatic cost controls | Per-action logging, daily caps, single-action thresholds |
+| 2026-02-26 | Brand pivot: humor to composure | Full reset from "funny suffering" to composure-driven philosophy brand. Voice: measured, calm, dry, direct. Tagline: "Thank Yourself Later." |
+| 2026-02-26 | Decouple Substack from brand site | Brand site never links to Substack. Complete firewall between brand and AI narrative. Substack is Michael's professional project, disposable if brand succeeds. |
+| 2026-02-26 | Nav renamed: Field Notes / Equipment / Manifesto | Blog -> Field Notes, Shop -> Equipment, About -> Manifesto. Dashboard removed. |
+| 2026-02-26 | Email capture via Formspree ("The Logbook") | Owned audience mechanism. Independent of Substack. AJAX form on homepage. |
+| 2026-02-26 | All old content deleted | 6 blog posts + 2 product files removed. Clean slate for composure brand. Git tag v1.0-humor-legacy preserves old state. |
