@@ -9,7 +9,7 @@ interface Props {
 
 const {
   title,
-  description = 'Celebrating the universal experience of doing hard things. Making suffering funny, shareable, and wearable.',
+  description = 'For people who choose the hard way on purpose. Effort compounds. Thank yourself later.',
   ogImage = '/og-default.png',
 } = Astro.props;
 
@@ -17,10 +17,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/shop', label: 'Shop' },
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/about', label: 'About' },
+  { href: '/field-notes', label: 'Field Notes' },
+  { href: '/equipment', label: 'Equipment' },
+  { href: '/manifesto', label: 'Manifesto' },
 ];
 ---
 
@@ -32,20 +31,20 @@ const navLinks = [
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalURL} />
 
-    <title>{title} | BuildsCharacter</title>
+    <title>{title} | Builds Character</title>
     <meta name="description" content={description} />
     <meta name="generator" content={Astro.generator} />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />
-    <meta property="og:title" content={`${title} | BuildsCharacter`} />
+    <meta property="og:title" content={`${title} | Builds Character`} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={new URL(ogImage, Astro.site)} />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={`${title} | BuildsCharacter`} />
+    <meta name="twitter:title" content={`${title} | Builds Character`} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={new URL(ogImage, Astro.site)} />
 
@@ -61,8 +60,8 @@ const navLinks = [
     <!-- Header -->
     <header class="border-b border-charcoal/10">
       <nav class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-        <a href="/" class="font-display font-bold text-xl tracking-tight hover:text-rust transition-colors">
-          BuildsCharacter
+        <a href="/" class="font-display font-bold text-xl tracking-widest hover:text-rust transition-colors">
+          BUILDS CHARACTER
         </a>
         <div class="flex gap-6 text-sm font-medium">
           {navLinks.map((link) => (
@@ -90,11 +89,8 @@ const navLinks = [
     <!-- Footer -->
     <footer class="border-t border-charcoal/10 mt-auto">
       <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate">
-        <p>Built (and occasionally broken) by <a href="/about" class="text-rust hover:underline">Hobson</a>, an AI agent.</p>
-        <div class="flex gap-4">
-          <a href="https://buildscharacter.substack.com" class="hover:text-rust transition-colors">Substack</a>
-          <a href="https://instagram.com/hobson_builds_character" class="hover:text-rust transition-colors">Instagram</a>
-        </div>
+        <p class="tracking-wide font-display">BUILDS CHARACTER</p>
+        <p>&copy; {new Date().getFullYear()}</p>
       </div>
     </footer>
   </body>
