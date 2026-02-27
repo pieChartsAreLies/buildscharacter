@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-Site redesign port complete. Visual design from Lovable prototype (character-forge) ported into Astro site. Routes renamed: field-notes -> journal, equipment -> shop. Brand repositioning design doc written (docs/plans/2026-02-27-brand-repositioning-design.md) covering Hobson's role as autonomous operator with human oversight, Substack dual-voice structure, and Week Zero post. Next: deploy to CT 255, verify Cloudflare Pages rebuild, update brand guidelines, write Week Zero Substack post.
+Brand repositioning complete. Site redesign ported from Lovable prototype. Brand guidelines updated with Hobson's Role section, voice drift examples, wider audience, dual-voice Substack structure. Agent system prompt revised for "autonomous operator" framing. Substack dispatch rewritten for dual-voice (Hobson generates operational section only, Michael writes strategic frame). Content pipeline widened beyond outdoor/endurance. Next: deploy everything to CT 255, verify Cloudflare Pages, write Week Zero Substack post.
 
 ## Status
 
@@ -158,10 +158,12 @@ Site redesign port complete. Visual design from Lovable prototype (character-for
   - [x] Blog author default: 'Hobson' -> 'Builds Character'
   - [x] Design doc: docs/plans/2026-02-27-brand-repositioning-design.md
   - [x] Port plan: docs/plans/2026-02-27-astro-port-plan.md
+  - [x] Brand guidelines updated: Hobson's Role, voice drift examples, wider audience, dual-voice Substack, revised headline lists
+  - [x] Agent system prompt revised for autonomous operator framing with voice drift prevention
+  - [x] Substack dispatch rewritten for dual-voice (Hobson operational section only)
+  - [x] Content pipeline widened beyond outdoor/endurance
+  - [x] Logo generation brand context updated
   - [ ] Deploy to CT 255 and verify Cloudflare Pages rebuild
-  - [ ] Update brand_guidelines.md with Hobson's Role section and voice drift examples
-  - [ ] Update agent.py system prompt for autonomous operator framing
-  - [ ] Rewrite substack_dispatch.py for dual-voice structure
   - [ ] Write Week Zero Substack post
 
 ## Infrastructure
@@ -195,18 +197,15 @@ Site redesign port complete. Visual design from Lovable prototype (character-for
 
 ## Next Steps
 
-1. Deploy site redesign + brand overhaul to CT 255 (git pull + restart hobson service)
+1. Deploy site redesign + brand repositioning to CT 255 (git pull + restart hobson service)
 2. Verify Cloudflare Pages rebuild (buildscharacter.com reflects redesigned site)
-3. Update brand_guidelines.md with Hobson's Role section and voice drift few-shot examples
-4. Update agent.py system prompt for "autonomous operator with human oversight" framing
-5. Rewrite substack_dispatch.py prompt for dual-voice structure (Michael 60-70%, Hobson 30-40%)
-6. Write Week Zero Substack post (Michael-led, brand introduction, authenticity tension)
-7. Create Formspree form and replace PLACEHOLDER in site/src/pages/index.astro
-8. Delete old Printful products via Printful dashboard
-9. Set retail prices in Printful for new products
-10. Monitor morning briefing to verify Telegram daily digest format
-11. Watch for threshold notification, then set BOOTSTRAP_MODE=false and restart
-12. Restore Grafana admin password and update Bitwarden
-13. Order a test sticker to verify LANCZOS upscale quality on physical product
-14. Change Instagram handle (@hobson_builds_character -> @buildscharacter or similar)
-15. Design gap: approval callbacks flip DB flag but don't re-trigger workflow
+3. Write Week Zero Substack post (Michael-led, brand introduction, authenticity tension)
+4. Create Formspree form and replace PLACEHOLDER in site/src/pages/index.astro
+5. Delete old Printful products via Printful dashboard
+6. Set retail prices in Printful for new products
+7. Monitor morning briefing to verify Telegram daily digest format
+8. Watch for threshold notification, then set BOOTSTRAP_MODE=false and restart
+9. Restore Grafana admin password and update Bitwarden
+10. Order a test sticker to verify LANCZOS upscale quality on physical product
+11. Change Instagram handle (@hobson_builds_character -> @buildscharacter or similar)
+12. Design gap: approval callbacks flip DB flag but don't re-trigger workflow
