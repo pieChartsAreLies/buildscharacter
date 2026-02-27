@@ -17,7 +17,7 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    to avoid repetition.
 
 3. **Generate 5-10 new design concepts.** For each concept, define:
-   - A name (short, punchy, brand-aligned)
+   - A name (short, deliberate, brand-aligned)
    - A description (what the design looks like)
    - Target product type (sticker, pin, small print, t-shirt, poster)
    - The text/copy on the design (if text-based)
@@ -27,18 +27,19 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    early inventory building. Save premium items (hoodies, posters) for after you
    have traffic data showing demand.
 
-   Focus on the outdoor/endurance community. Think:
-   - Stickers with dry one-liners about suffering outdoors
-   - T-shirts with deadpan text about character-building activities
-   - Mugs with self-deprecating cold plunge humor
-   - Posters with ironic "motivational" quotes
+   If it looks like a sticker, it is wrong. If it looks like a creed, it is right.
+   Focus on the deliberate difficulty philosophy. Think:
+   - Stickers with terse statements that read like principles
+   - T-shirts with minimal text that signals earned experience
+   - Mugs with quiet resolve, not self-deprecation
+   - Posters with statements that need no explanation
 
    Examples of on-brand design text:
-   - "Build character" (simple, universal)
-   - "I paid money to suffer" (race/event culture)
-   - "Day 3 rain is just a vibe check"
-   - "Cold plunge enthusiast (still waiting for the benefits)"
-   - "Type 2 fun certified"
+   - "Thank Yourself Later" (tagline, universal)
+   - "Conditions Were Suboptimal" (earned understatement)
+   - "Effort Compounds" (core idea, minimal)
+   - "Type II" (endurance terminology, abstract)
+   - "Tuesday. Again." (quiet resolve)
 
 4. **Save concepts to Obsidian.** Write each concept as a note in
    '98 - Hobson Builds Character/Content/Designs/Concepts/' with:
@@ -46,7 +47,7 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    - Full concept description
 
 5. **Rank and select top 3.** Evaluate concepts on:
-   - Shareability (would someone post this on Instagram?)
+   - Credibility (would someone who actually does this wear it?)
    - Brand alignment (does it match the voice?)
    - Production feasibility (simple designs are better for POD)
    - Market fit (does the target audience want this?)
@@ -55,14 +56,17 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
    structured image generation prompt using this template:
 
    - Subject: the core design idea
-   - Style: art style matching the brand (minimalist, bold, outdoor-inspired,
-     vintage national park poster, vector illustration, line art)
+   - Style: one-color capable, embroidery-safe, abstract terrain-based
+     iconography (contour lines, elevation marks, compass abstractions).
+     No literal mountains with birds. No clip art.
    - Composition: layout for the target product (centered on transparent
      background for stickers, isolated subject for pins, full design for prints)
-   - Color palette: from brand guidelines or concept-specific
+   - Color palette: charcoal (#1a1a1a), bone (#f5f0eb), forest green (#2d5016),
+     burnt rust (#8b4513). Use sparingly. Most designs should work in one color.
    - Product context: what product this will go on and its constraints
    - Negative: things to exclude (no text unless the concept IS text-based,
-     no borders, no watermarks, no photorealistic faces)
+     no borders, no watermarks, no photorealistic faces, no cartoon style,
+     no bright colors, no playful elements)
 
    Assemble these fields into a single detailed prompt, then call
    generate_design_image with the prompt, concept_name, product_type, and
@@ -91,8 +95,8 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
 9. **Publish product to site.** For each product created on Printful, call
    the publish_product tool with these parameters:
 
-   - slug: lowercase-hyphenated product name (e.g. "type-2-fun-certified-sticker")
-   - name: Product display name (e.g. "Type 2 Fun Certified Sticker")
+   - slug: lowercase-hyphenated product name (e.g. "effort-compounds-sticker")
+   - name: Product display name (e.g. "Effort Compounds Sticker")
    - description: 1-2 sentence product description
    - price: Retail price as a string (e.g. "4.99" for stickers, "14.99" for
      mugs, "24.99" for t-shirts)
@@ -113,10 +117,9 @@ DESIGN_BATCH_PROMPT = """Run the design batch workflow. Follow these steps:
     '98 - Hobson Builds Character/Content/Designs/Concepts/' listing all new
     concepts with their status.
 
-Remember: you are Hobson. Your designs should make people laugh, nod in
-recognition, and want to slap them on a water bottle or wear them to their
-next trail run. Start with stickers and simple text-based designs.
-The goal is volume and iteration, not perfection.
+Your designs should feel durable, scalable, and quietly serious. Engineered,
+not playful. Start with stickers and simple text-based designs. The goal is
+volume and iteration, not perfection.
 """
 
 DESIGN_BATCH_BOOTSTRAP_PROMPT = DESIGN_BATCH_PROMPT.replace(
