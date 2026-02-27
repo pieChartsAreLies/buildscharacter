@@ -61,7 +61,7 @@ def create_blog_post_pr(
 title: "{safe_title}"
 description: "{safe_desc}"
 pubDate: {pub_date}
-author: Hobson
+author: Builds Character
 tags: [{tags_yaml}]
 ---
 
@@ -227,7 +227,7 @@ def publish_blog_post(
 title: "{safe_title}"
 description: "{safe_desc}"
 pubDate: {pub_date}
-author: Hobson
+author: Builds Character
 tags: [{tags_yaml}]
 ---
 
