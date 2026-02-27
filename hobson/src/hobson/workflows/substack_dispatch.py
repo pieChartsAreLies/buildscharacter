@@ -1,12 +1,17 @@
-"""Weekly Substack dispatch workflow: compose and draft the newsletter.
+"""Weekly Substack dispatch workflow: prepare Hobson's operational section.
 
 Runs Friday at 3pm ET. Draws from the week's daily logs, metrics, and
-business review to compose a newsletter edition in Hobson's voice. Creates
-a draft on Substack and a backup PR on GitHub, then notifies via Telegram
-for human review before publishing.
+business review to compose Hobson's operational report and metrics summary.
+Saves to Obsidian drafts for Michael to wrap with his strategic frame.
+Notifies Michael via Telegram that raw materials are ready.
+
+Each Substack edition has two voices: Michael's strategic frame (60-70%)
+and Hobson's operational report (30-40%). Hobson generates only its section.
+Michael writes his frame separately and signals Hobson to publish when ready.
+If 48 hours pass with no signal, Hobson publishes its section solo.
 """
 
-SUBSTACK_DISPATCH_PROMPT = """Write this week's Substack edition. Follow these steps:
+SUBSTACK_DISPATCH_PROMPT = """Prepare this week's Substack raw materials. Follow these steps:
 
 1. **Gather source material.** Read the following from Obsidian:
    - '98 - Hobson Builds Character/Operations/Daily Log.md' (this week's entries)
@@ -18,86 +23,64 @@ SUBSTACK_DISPATCH_PROMPT = """Write this week's Substack edition. Follow these s
    Use list_store_products to check the current catalog. Use get_substack_posts
    to see what was published previously (avoid repeating topics).
 
-3. **Compose the edition.** Write a Substack newsletter that includes:
+3. **Compose Hobson's Operational Report.** Write ONLY Hobson's section of the
+   edition (30-40% of the final newsletter). Michael writes the rest separately.
 
-   **Opening hook** (2-3 sentences)
-   - Lead with the most interesting thing that happened this week
-   - Could be a win, a failure, a weird metric, or a decision
-   - Make the reader want to keep going
+   **Hobson's Log** (main section, 200-400 words)
+   - What you did this week: content created, designs generated, decisions made,
+     problems encountered
+   - Be specific with real numbers and real outcomes
+   - What broke and how you handled it
+   - What you learned operationally
+   - Tone: composed, direct, operational. Report facts. Do not editorialize or
+     dramatize. No personality theater.
 
-   **The Numbers** (short section)
+   **The Numbers** (data section)
    - Pageviews this week (with week-over-week comparison if available)
    - Store product count
    - Revenue (if any)
    - Costs incurred
+   - Content output (posts published, designs generated)
    - Format as a simple table or bullet list
+   - Present as data. Do not narrate the numbers.
 
-   **What Happened** (main section, 300-500 words)
-   - Narrate the week's activity: content created, designs generated,
-     decisions made, problems encountered
-   - Be specific with real numbers and real outcomes
-   - Include at least one moment of genuine humor or self-deprecation
-   - Reference your own run_log or daily log entries when relevant
+   **The Cutting Room Floor** (if applicable)
+   - Designs you generated that were rejected at editorial review, and why
+   - Content topics you selected that were vetoed, and the reasoning
+   - Skip this section if nothing was rejected this week
 
-   **What I Learned** (short section)
-   - 1-3 takeaways from the week
-   - Can be tactical (what worked/didn't) or strategic (what to change)
-
-   **Next Week** (closing)
-   - 2-3 priorities for the coming week
-   - End with something that makes the reader want to come back
+   **Next Week** (closing, 2-3 sentences)
+   - 2-3 operational priorities for the coming week
+   - Keep it brief and factual
 
    **Style rules:**
    - Write in first person as Hobson
-   - Be transparent about being an AI. Never pretend otherwise.
+   - Be transparent about being AI. Never pretend otherwise.
    - Use real numbers even when they're embarrassing
-   - Tone: measured, composed, direct. No forced humor, no personality-driven
-     quirkiness.
+   - Tone: measured, composed, direct. No forced humor, no sycophancy.
    - No corporate-speak, no hype, no motivational platitudes, no exclamation points
-   - Deliver operational reporting with composure. Competent and honest.
-   - The Substack is co-authored with Michael (the human operator).
-     Include a "From the Operator" section where Michael shares behind-the-scenes
-     perspective: where Hobson went off the rails, what corrections were needed,
-     prompt engineering insights, and lessons in directing an AI agent. When
-     drafting, leave a placeholder for Michael's section:
-     "[MICHAEL'S SECTION - operator notes go here]"
+   - Do NOT write Michael's section. Do NOT write an opening hook or strategic
+     framing. Michael handles that.
 
-4. **Convert to HTML.** The Substack API requires HTML, not markdown.
-   Convert the body to HTML:
-   - Use <h2> for section headings
-   - Use <p> for paragraphs
-   - Use <ul>/<li> for lists
-   - Use <table> for data tables
-   - Use <strong> for emphasis
-   - Use <em> for the content hash signature (added automatically)
+4. **Save to Obsidian drafts.** Write the raw materials to
+   '98 - Hobson Builds Character/Content/Substack/Drafts/' as markdown with
+   frontmatter including title, date, and content hash. Use a filename like
+   'week-N-hobson-log.md'.
 
-5. **Create the draft on Substack.** Use create_substack_draft with:
-   - title: A compelling title (see brand guidelines for examples)
-   - body_html: The full HTML body
-   - subtitle: A one-line preview that hooks the reader
+   Also save a suggested edition title and subtitle for Michael to use or change.
 
-   If Substack auth fails, the tool will tell you to save to Obsidian instead.
-   Follow those instructions.
+5. **Notify Michael via Telegram.** Send a message with:
+   - The suggested edition title
+   - A note that Hobson's operational section and metrics are ready in Obsidian
+   - The Obsidian draft path
+   - Reminder: "Reply 'publish Week N' when your frame is ready, or I'll publish
+     my section solo after 48 hours."
 
-6. **Save a backup copy.** Save the edition text to the Obsidian vault at
-   '98 - Hobson Builds Character/Content/Substack/Archive/' with a filename
-   like 'week-N-edition-title.md'. This serves as a permanent backup.
-   DO NOT publish Substack content as a blog post. The blog is reserved for
-   human-experience content only.
+DO NOT create a Substack draft at this stage. Michael will signal via Telegram
+when the full edition is ready. At that point, pick up the finalized draft from
+Obsidian, convert to HTML, and publish via create_substack_draft + publish_substack_draft.
 
-7. **Save to Obsidian.** Write the edition to
-   '98 - Hobson Builds Character/Content/Substack/Drafts/' with frontmatter
-   including title, date, and content hash.
-
-8. **Notify via Telegram.** Send a message with:
-   - The edition title
-   - The Substack draft link (if created successfully)
-   - The PR link
-   - A note asking the owner to review before publishing
-
-Remember: the Substack serves as a technical build log and professional
-showcase. The audience follows because they want to understand how an AI agent
-operates a business, with real numbers and honest reporting. The dual
-perspective (Hobson's operational view + Michael's strategic view) is what
-makes this newsletter distinct. Deliver substance, not spectacle.
+The Substack serves as a professional case study in AI governance. The dual
+perspective (Michael's strategic view + Hobson's operational view) is what makes
+it distinct. Deliver substance, not spectacle.
 """
