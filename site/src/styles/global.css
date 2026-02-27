@@ -3,18 +3,80 @@
 @theme {
   /* Brand colors - primary */
   --color-charcoal: #1a1a1a;
-  --color-offwhite: #f5f0eb;
+  --color-bone: #f5f0eb;
 
   /* Brand colors - secondary */
   --color-rust: #8b4513;
   --color-forest: #2d5016;
-  --color-technical-red: #a63d40;
 
-  /* Utility colors */
-  --color-slate: #4a5568;
-  --color-cream: #faf6f1;
+  /* Depth and utility */
+  --color-warm-gray: #c4bbb2;
+  --color-muted: #6b7280;
 
-  /* Fonts - no monospace on public site */
+  /* Fonts */
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+
+  /* Letter spacing */
+  --tracking-ultra-wide: 0.25em;
+  --tracking-mega-wide: 0.4em;
+
+  /* Line height */
+  --leading-reading: 1.75;
+}
+
+/* Noise overlay texture */
+.noise-overlay {
+  position: relative;
+}
+.noise-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  z-index: 1;
+}
+.noise-overlay > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Topo pattern texture */
+.topo-pattern {
+  position: relative;
+}
+.topo-pattern::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M100 20c44 0 80 36 80 80s-36 80-80 80S20 144 20 100 56 20 100 20z' fill='none' stroke='%23f5f0eb' stroke-width='0.5'/%3E%3Cpath d='M100 40c33 0 60 27 60 60s-27 60-60 60-60-27-60-60 27-60 60-60z' fill='none' stroke='%23f5f0eb' stroke-width='0.5'/%3E%3Cpath d='M100 60c22 0 40 18 40 40s-18 40-40 40-40-18-40-40 18-40 40-40z' fill='none' stroke='%23f5f0eb' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  z-index: 1;
+}
+.topo-pattern > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Scroll reveal */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reading width */
+.reading-width {
+  max-width: 65ch;
 }
