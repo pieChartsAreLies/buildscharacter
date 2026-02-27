@@ -1,0 +1,26 @@
+# Old blog posts -> field notes
+/blog/hello-world /field-notes 301
+/blog/rain-day-three /field-notes 301
+/blog/gear-suffering-style /field-notes 301
+/blog/parenting-builds-character /field-notes 301
+/blog/type-2-fun-addiction /field-notes 301
+/blog/cold-plunge-lies /field-notes 301
+
+# Old blog index -> field notes
+/blog /field-notes 301
+/blog/ /field-notes 301
+
+# Old shop -> equipment
+/shop /equipment 301
+/shop/ /equipment 301
+
+# Old product pages -> equipment
+/shop/* /equipment 301
+
+# Old about -> manifesto
+/about /manifesto 301
+/about/ /manifesto 301
+
+# Deleted dashboard
+/dashboard / 301
+/dashboard/ / 301
