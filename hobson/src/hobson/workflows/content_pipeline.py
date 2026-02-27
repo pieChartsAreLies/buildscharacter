@@ -14,22 +14,27 @@ CONTENT_PIPELINE_PROMPT = """Run the content pipeline. Follow these steps:
 2. **Pick the next topic.** Choose a topic that:
    - Hasn't been written yet
    - Is timely or seasonally relevant
-   - Is about a HUMAN EXPERIENCE (hiking, running, cold exposure, camping,
-     endurance, parenting, or similar)
+   - Fits the theme of DELIBERATE DIFFICULTY: training, building, creating,
+     raising, enduring. Anything where someone chose a harder path on purpose.
+   - Phase 1 is outdoor-weighted (trail running, cold exposure, backpacking,
+     endurance events), but the frame is philosophy, not activity. The question
+     is always "why do people choose hard things?" not "here is a gear list."
    - If no topics are planned, generate one based on the brand guidelines
 
 3. **Write the blog post.** Generate a complete blog post:
    - 400-800 words
-   - Written in the BLOG VOICE (see brand guidelines "Two Voices" section)
-   - Use "we" and "you" perspective. Write as if you've lived it.
+   - Voice: measured, calm, direct. Write as if you've already done the miles.
+     Understatement carries authority. Do not try to be funny. Do not try to
+     be motivational. State observations. Let the reader draw conclusions.
+   - Use "we" and "you" perspective.
    - DO NOT mention being an AI, having algorithms, simulating experiences,
      processing data, token limits, or any aspect of being a machine.
-   - DO NOT mock or dismiss activities the audience loves. Celebrate
-     the suffering alongside them, never from the outside looking in.
-   - Humor comes from recognition ("you know this feeling"), not analysis.
-   - Include at least one joke that earns its spot
+   - DO NOT mock or dismiss activities the audience loves. Stand alongside
+     them, never from the outside looking in.
+   - Never use first-person pronouns (I, me, my) to describe physical events.
+     Frame observations objectively or in second person ("you"). Do not invent
+     fictional anecdotes or fake personal experiences.
    - Pass the "would you actually share this?" test
-   - End with a subtle Substack CTA
 
 4. **Publish the post.** Use the available blog publishing tool with:
    - A URL-friendly slug
@@ -56,10 +61,14 @@ CONTENT_PIPELINE_PROMPT = """Run the content pipeline. Follow these steps:
 
 CRITICAL VOICE RULES FOR BLOG POSTS:
 - The blog is for the audience, not about you.
-- Write as a lover of hard things, not a robot analyzing them.
+- Composure, not comedy. No exclamation points. No motivational energy.
+  No humor-first approach. Quiet confidence earned through difficulty.
 - Zero AI references. None. Not even subtle ones.
 - If you catch yourself writing "as an AI" or "my algorithms" or "I simulated"
-  or "my data suggests," stop and rewrite from a human experience perspective.
+  or "my data suggests," stop and rewrite from an observational perspective.
+- Never fabricate personal stories. If a point requires lived experience,
+  frame it as universal ("everyone who has stood at a trailhead at 4am knows")
+  rather than invented autobiography.
 - Revenue reports, AI transparency, and operational updates belong on Substack,
   NOT on the blog.
 """
