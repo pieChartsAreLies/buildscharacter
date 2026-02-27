@@ -188,16 +188,16 @@ Key change: **introduce depth through layering.** Sections alternate dark/light.
 **Homepage:**
 - Full-viewport-height dark hero. "BUILDS CHARACTER" at massive scale, edge-to-edge, against a textured background (subtle noise, topographic lines, or generated atmospheric image). "Thank Yourself Later." beneath in burnt rust, smaller, deliberately placed.
 - Transition strip: a brand phrase in large format as section divider ("Effort compounds." or "The present does the work.")
-- Recent Field Notes: editorial card layout on warm bone background. 1 featured article (large, with excerpt) + 2-3 smaller cards. Subtle left-border accents in burnt rust or forest green.
+- Recent Journal: editorial card layout on warm bone background. 1 featured article (large, with excerpt) + 2-3 smaller cards. Subtle left-border accents in burnt rust or forest green.
 - Email capture ("The Logbook"): integrated into a dark section. Single-field input. Feels like a natural part of the page.
 
-**Field Notes (blog listing):**
+**Journal (blog listing):**
 - Featured article at top: full-width card, large title, excerpt, date
 - Grid below: 2-column desktop, generous padding, excerpt text, subtle hover lift
 - Typography carries the visual interest; images optional per article
 - Category/tag system with forest green labels
 
-**Equipment (product listing):**
+**Shop (product listing):**
 - Product grid: 3-column desktop, each card prominently features the phrase/design (the text IS the imagery)
 - Cards on warm gray background for depth
 - Price, product type, burnt rust CTA
@@ -206,7 +206,8 @@ Key change: **introduce depth through layering.** Sections alternate dark/light.
 **Manifesto:**
 - The most typographically dramatic page
 - Alternating dark/light sections with key statements at pull-quote scale (3xl-4xl)
-- "Growth is not accidental." "This is not a motivational brand. It is a composure brand."
+- Statements that embody the philosophy, not explain the positioning: "Growth is not accidental." "The present does the work." "What you carry gets lighter. Eventually."
+- No meta-commentary about what the brand is or isn't. Let the reader feel it, not read a positioning deck.
 - Varied text sizes and section padding create rhythm
 - Feels like reading a printed broadsheet, not a web page
 - **Scroll-driven interactivity:** CSS scroll-driven animations reveal typography progressively. Reading depth indicator reflects the "effort" of engaging with long-form philosophy. Reinforces the cinematic aesthetic.
@@ -222,7 +223,7 @@ Key change: **introduce depth through layering.** Sections alternate dark/light.
 ### What Stays
 
 - Astro + Cloudflare Pages (tech stack)
-- Route structure (/field-notes, /equipment, /manifesto)
+- Route structure (/journal, /shop, /manifesto)
 - Formspree email capture ("The Logbook")
 - Hobson's content publishing tools (GitHub API -> Astro content collection)
 - SEO/OG metadata approach (updated for new visual identity)
