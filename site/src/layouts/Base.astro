@@ -58,10 +58,10 @@ const navLinks = [
   <body class="min-h-screen flex flex-col font-sans">
     <!-- Nav -->
     <nav class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 py-5 bg-charcoal/90 backdrop-blur-sm border-b border-bone/5">
-      <a href="/" class="font-display text-sm md:text-base font-bold tracking-ultra-wide uppercase text-bone">
+      <a href="/" class="font-display text-xs sm:text-sm md:text-base font-bold tracking-widest sm:tracking-ultra-wide uppercase text-bone whitespace-nowrap">
         BUILDS CHARACTER
       </a>
-      <div class="flex items-center gap-6 md:gap-10">
+      <div class="flex items-center gap-3 sm:gap-6 md:gap-10">
         {navLinks.map((link) => (
           <a
             href={link.href}
