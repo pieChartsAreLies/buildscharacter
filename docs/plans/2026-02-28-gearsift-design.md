@@ -76,6 +76,8 @@ Users describe their situation (activity type, experience level, budget, conditi
 
 Dockerized from day one for portability. Migration is re-pointing Cloudflare DNS from tunnel to cloud provider.
 
+**Resource isolation (bootstrap phase):** Separate LXC containers for the API and batch processing jobs (scraping, LLM extraction, feed ingestion). Prevents a large data job from spiking CPU/RAM and degrading user-facing API performance.
+
 ## Data Model
 
 ```
@@ -95,17 +97,40 @@ products
 
 product_retailers
   - product_id, retailer_id, url, affiliate_url
-  - current_price, last_price_check
+  - current_price, last_price_check, in_stock (boolean)
+
+affiliate_clicks
+  - id, product_id, retailer_id, clicked_at, referrer_url, advisor_profile_id (nullable)
 
 retailers
   - id, name (REI, Amazon, Backcountry, etc.)
   - affiliate_program, commission_rate
 
+reviewers
+  - id, name, channel_url, platform (youtube/reddit/etc)
+  - specialty_tags (text[]: "ultralight", "budget", "big-and-tall", "thru-hiking", etc.)
+
 product_sentiment
-  - product_id, source_type (youtube/reddit/etc)
-  - source_url, reviewer_name, reviewer_channel_url
+  - product_id, reviewer_id, source_type
+  - source_url
   - pros (text[]), cons (text[])
   - extracted_at
+
+kits
+  - id, name, slug, description
+  - activity_type, season, budget_tier, target_weight
+  - curated_by (system/user in future phases)
+  - created_at, updated_at
+
+kit_items
+  - kit_id, product_id, category_id
+  - reasoning (why this product in this kit)
+
+extraction_failures (dead letter queue)
+  - id, product_id, source_url, extraction_type (spec/sentiment)
+  - raw_input, error_message, attempts
+  - status (pending/resolved/manual_review)
+  - created_at, resolved_at
 
 advisor_profiles
   - id, activity_type, experience_level, budget_range
@@ -122,6 +147,17 @@ price_history (phase 5)
 
 Adding a new category is a data task (define spec_schema, ingest products), not a code change.
 
+### Schema Management & Versioning
+
+Category spec schemas are versioned JSON Schema files stored in the repository (e.g., `schemas/tents.v1.json`). The `categories` table references a specific schema version.
+
+**Schema change process:**
+1. Create new version file (`tents.v2.json`) with the added/modified fields
+2. Write a migration script that identifies products on the old version and attempts to backfill the new fields (via Tier 2 spec enrichment or manual entry)
+3. Products with missing values for new fields get `null` (not excluded from results, just displayed as "Not available")
+4. Update category to reference new schema version
+5. Hobson monitors backfill progress and flags products still missing the new field
+
 ## Data Pipeline
 
 ### Tier 1: Affiliate Product Feeds (AvantLink)
@@ -133,6 +169,7 @@ Primary data source. Both REI and Backcountry run affiliate programs through Ava
 - Filterable by brand, department, category, sub-category
 - Backcountry catalog: 500k+ products
 - This is the day-one data source. No scraping required to launch.
+- **Adapter architecture:** The feed ingestion pipeline is built with a provider-agnostic adapter pattern. Each affiliate network (AvantLink, CJ, ShareASale) gets its own adapter that normalizes feed data into the shared product schema. Adding a new network means writing a new adapter, not rearchitecting the pipeline. This mitigates single-source dependency on AvantLink.
 
 ### Tier 2: Spec Enrichment (Targeted)
 
@@ -142,16 +179,19 @@ Affiliate feeds provide descriptions but may lack structured specs (weight, pack
 - LLM extraction via Ollama (CT 205) or Gemini Flash: HTML to structured JSON matching category spec_schema
 - One-time per product, refresh monthly
 - Surgical, not bulk. No proxy infrastructure needed for this volume.
+- Failed extractions go to a dead letter queue (`extraction_failures` table) for manual review or retry with adjusted prompts.
+- Hobson's "self-healing" is realistic only for prompt drift (adjusting extraction prompts). Page structure changes that break the pre-processor require manual intervention. The dead letter queue ensures nothing is silently lost.
 
 ### Tier 3: YouTube Sentiment
 
 Aggregate community sentiment from top outdoor gear YouTubers.
 
-- Curated list of 20-30 gear review channels
+- Curated list of 20-30 gear review channels, each tagged by specialty (ultralight, budget, thru-hiking, car camping, big-and-tall, etc.)
 - Transcript extraction via existing YouTube pipeline (CT 202)
 - Gemini Flash for structured extraction: product-specific pros and cons
-- Map sentiment back to products in database
+- Map sentiment back to products in database via reviewer_id
 - Weekly batch job
+- Reviewer specialty tags add context to sentiment display: "Reviewers focused on ultralight backpacking praised this tent's low weight"
 
 ### Data Quality (Hobson)
 
@@ -183,6 +223,30 @@ The advisor is an adaptive decision tree, not a linear quiz. Each answer determi
 - No account wall, no email gate
 - Feels like a knowledgeable friend at REI, not a lead capture form
 
+### Decision tree implementation:
+
+Decision trees are defined in YAML config files, one per entry path. Each file specifies questions, possible answers, branching logic, and scoring modifications. This makes the advisor logic inspectable, modifiable, and extensible without code changes.
+
+```yaml
+# Example: advisor/trees/single-tent.yaml
+entry: "I need a tent"
+questions:
+  - id: capacity
+    text: "How many people?"
+    options: [1, 2, 3-4, 5+]
+    next: use_type
+  - id: use_type
+    text: "Backpacking or car camping?"
+    options: [backpacking, car_camping]
+    scoring_mods:
+      backpacking: { weight_priority: +3 }
+    next: budget
+  - id: budget
+    text: "What's your budget?"
+    options: [under_150, 150_300, 300_500, no_limit]
+    next: results
+```
+
 ### Recommendation engine:
 
 Rules-based scoring, not ML. Each product scored against the advisor profile:
@@ -194,9 +258,24 @@ Rules-based scoring, not ML. Each product scored against the advisor profile:
 
 Products ranked per category, top pick + 1-2 alternatives. Scoring is transparent, debuggable, tunable. When a recommendation is wrong, adjust a weight or add a rule. No black box.
 
+**Scoring transparency for users:** The recommendation output shows the score breakdown per product, surfacing why a product was chosen and the trade-offs vs alternatives:
+- "Nemo Hornet Elite 2P: Weight 10/10, Budget 7/10, Capacity 9/10, Overall Fit 9.2"
+- "We chose this because your top priority was weight. The trade-off is durability; the fabrics are thinner than the Big Agnes Copper Spur, which scores higher if you're hard on your gear."
+
+The scoring engine surfaces the delta between top picks, not just the winner. This is a major trust builder and differentiator.
+
+**Out-of-stock handling:** Products marked `in_stock = false` are deprioritized in recommendations. If a top pick is out of stock everywhere, the next alternative is promoted with a note: "Our top pick (X) is currently out of stock. Here's the next best option."
+
+### Affiliate link cloaking & tracking:
+
+All affiliate links route through `gearsift.com/go/<product-slug>/<retailer>` which:
+1. Logs the click to `affiliate_clicks` table (product, retailer, timestamp, referrer, advisor profile if applicable)
+2. Redirects to the retailer's affiliate URL
+3. Enables internal click analytics without depending on affiliate network reporting
+
 ### Output:
 - Personalized gear list organized by category
-- Each recommendation: product, why it fits, key specs, pros/cons from reviewers, affiliate links to 1-3 retailers
+- Each recommendation: product, score breakdown, why it fits, trade-offs vs alternatives, key specs, pros/cons from reviewers, affiliate links to 1-3 retailers with stock status
 - Shareable via URL (no account needed)
 - Phase 5: save to wishlist, price alerts
 
@@ -209,6 +288,10 @@ Product pages include a "What Reviewers Are Saying" section:
 - Aggregate sentiment across reviewers (e.g., "4 of 5 reviewers highlighted weight as a strength")
 
 Always attributed, always linked. Drives traffic to reviewers. Positions GearSift as an aggregator, not an author.
+
+### Data Corrections
+
+Every product page includes a subtle "Suggest a correction" link. Opens a simple form: which spec is wrong, what the correct value is, and a source URL. Creates a free QA pipeline from engaged users. Corrections go to a review queue (Hobson can flag obvious spam, human approves).
 
 ## SEO & Discovery
 
@@ -224,11 +307,32 @@ Every piece of structured data becomes a search entry point.
 
 - Product pages with structured specs rank for long-tail queries review sites don't target
 - Comparison pages are auto-generated from database for top product pairs per category
+- Kit pages as high-value SEO landing pages (see Kits section below)
 - Guide pages are written sparingly, only when data pages can't cover the search intent
 - Astro static generation = pre-rendered HTML, fast, crawlable
 - JSON-LD structured data on product pages
 - Auto-generated sitemap from product database
 - No blog for blog's sake. Every page exists because the data justifies it.
+
+**Category page experience (beyond product lists):**
+- Interactive data views: weight vs price scatter plots, filterable by construction type/material/season
+- Pre-built filter combinations surfacing the structured data ("Lightest tents under $300", "3-season sleeping bags by warmth rating")
+- Category pages are data discovery tools, not just product grids
+
+## Kits (First-Class Object)
+
+Curated gear kits are elevated from an advisor output to a standalone feature with their own pages, SEO presence, and shareable URLs.
+
+**Examples:**
+- `/kits/beginner-backpacking-under-500` - "Complete Backpacking Kit Under $500"
+- `/kits/ultralight-thru-hiking` - "Sub-12lb Thru-Hiking Setup"
+- `/kits/pacific-northwest-3-season` - "PNW 3-Season Backpacking Kit"
+
+Each kit page shows: all items with specs, total weight, total cost, why each item was chosen, and affiliate links for every product. Shareable and bookmarkable.
+
+Initially curated (system-generated from advisor logic for common profiles). Kit builder advisor path outputs can be saved as kits. Future phases could open kit creation to users.
+
+Kits are high-value SEO targets. "Backpacking gear list for beginners" and "ultralight backpacking gear list" are real search queries with buying intent.
 
 ## Starting Categories
 
@@ -243,7 +347,9 @@ Initial set (flexible, informed by AvantLink feed coverage and product depth):
 - Hiking socks
 - Hiking/trekking poles
 
-Target: 10+ products from 5+ brands per category before launch. Categories expand based on data and user demand, not assumptions.
+**Launch criteria per category:** Not just product count but advisor-path coverage. Before launching the advisor for a category, manually run through the top 80% of likely quiz combinations and confirm the database returns a credible, defensible result for each. If it doesn't, that category needs more data before the advisor supports it. Product browsing and comparison can go live with fewer products; the advisor needs density.
+
+Categories expand based on data and user demand, not assumptions.
 
 ## Hobson's Role
 
@@ -257,6 +363,16 @@ Hobson is not the builder. Claude Code builds the platform. Hobson operates:
 - **Merch operations:** Existing Printful pipeline continues if merch stays in scope
 
 The agent excels at ongoing operational monitoring, not one-time construction.
+
+### Public Data Quality Page
+
+`gearsift.com/status` displays live operational metrics:
+- "4,120 products with verified specs"
+- "Prices updated within the last 24 hours for 98.7% of products"
+- "Last AvantLink feed sync: 2 hours ago"
+- Spec coverage percentages per category
+
+Radical transparency about data operations. Differentiator for a data platform and aligns with the Substack's transparency narrative.
 
 ## Substack Integration
 
@@ -345,3 +461,27 @@ Key affiliate programs:
 - Backcountry: 4-12% sliding scale (via AvantLink)
 - Patagonia: 8%, 60-day cookie
 - Hyperlite Mountain Gear: 10%, avg sale ~$350
+
+## Gemini Adversarial Review (2026-02-28)
+
+Reviewed by Gemini 2.5 Pro. Findings and dispositions:
+
+**Incorporated:**
+- **[CRITICAL] spec_schema management undefined:** Added schema versioning strategy (versioned JSON files, migration scripts, backfill process).
+- **[IMPORTANT] Data pipeline brittleness:** Added dead letter queue (`extraction_failures` table), clarified Hobson's self-healing scope (prompt drift only, not page restructuring).
+- **[IMPORTANT] Cold start problem:** Launch criteria changed from product count to advisor-path coverage (top 80% of quiz combinations must return credible results).
+- **[IMPORTANT] Recommendation "why" under-specified:** Added score breakdown display and trade-off surfacing between top picks.
+- **[IMPORTANT] Decision tree implementation vague:** Added YAML config-based decision tree structure with example.
+- **[IMPORTANT] Missing in_stock + link cloaking:** Added `in_stock` field, out-of-stock handling in recommendations, `affiliate_clicks` table, and `/go/` redirect for click tracking.
+- **[IMPORTANT] AvantLink dependency:** Added adapter pattern architecture for feed ingestion, making new network integration a new adapter not a rewrite.
+- **[IMPORTANT] Expose scoring to users:** Added transparent score breakdown in recommendation output.
+- **[CONSIDER] Resource contention:** Added resource isolation (separate containers for API and batch jobs).
+- **[CONSIDER] Browser persona underserved:** Added data visualization and interactive filtering on category pages.
+- **[CONSIDER] Reviewer sentiment bias:** Added reviewer specialty tags and contextual sentiment display.
+- **[CONSIDER] Kits as first-class objects:** Added Kits section with own data model, pages, SEO strategy, and shareable URLs.
+- **[CONSIDER] User-submitted data corrections:** Added "Suggest a correction" feature on product pages.
+- **[CONSIDER] Public data quality status page:** Added `/status` page with live operational metrics.
+
+**Declined:**
+- **[CRITICAL] Homelab SPOF:** Accepted risk for bootstrap phase. User made deliberate decision to validate on homelab before paying for cloud. Migration trigger (10 conversions) is defined.
+- **[CRITICAL] Over-reliance on Claude Code:** Generic AI risk warning. User is the architect directing implementation, not blindly accepting output. Not specific to this design.
