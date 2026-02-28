@@ -4,9 +4,9 @@
 
 **Goal:** Deploy a live outdoor gear advisor site with browsable product pages, category listings, and affiliate links, backed by a FastAPI backend and AvantLink product feed data.
 
-**Architecture:** Astro static site on Cloudflare Pages talks to a FastAPI backend on a Loki LXC container (exposed via Cloudflare Tunnel). Product data comes from AvantLink affiliate feeds (REI + Backcountry), ingested daily into PostgreSQL on CT 201. Affiliate clicks route through `/go/` redirect for tracking.
+**Architecture:** Astro static site on Cloudflare Pages talks to a FastAPI backend on a Loki LXC container (exposed via Cloudflare Tunnel). Product data comes from AvantLink affiliate feeds (REI + Backcountry), ingested daily into PostgreSQL on CT 201. Affiliate URLs are baked directly into static HTML (not routed through the API) so revenue is never blocked by homelab downtime. Click tracking via lightweight client-side JS or Cloudflare Worker.
 
-**Tech Stack:** Python 3.11, FastAPI, asyncpg, Pydantic, PostgreSQL 16, Astro 5, React (islands), Tailwind CSS 4, Cloudflare Pages, Cloudflare Tunnel, Docker (prepared, not required for bootstrap)
+**Tech Stack:** Python 3.11, FastAPI, asyncpg, Pydantic, PostgreSQL 16, Astro 5, Tailwind CSS 4, Cloudflare Pages, Cloudflare Tunnel, Docker (prepared, not required for bootstrap)
 
 **Design Doc:** `docs/plans/2026-02-28-gearsift-design.md`
 
@@ -2268,7 +2268,186 @@ These require human action and cannot be automated:
 - [ ] `/categories` lists all 9 categories
 - [ ] At least one category has 10+ products from 5+ brands
 - [ ] Product pages show specs, prices, and affiliate links
-- [ ] Clicking "Buy from REI" routes through `/go/` redirect and logs the click
+- [ ] Affiliate links go directly to retailer (no API dependency)
 - [ ] `/health` returns ok with product and category counts
 - [ ] Feed sync CLI runs successfully and updates product data
+- [ ] Feed sync triggers Cloudflare Pages rebuild automatically
 - [ ] Astro static build generates all product and category pages
+- [ ] SEO: product pages have proper title, description, OG tags, JSON-LD
+
+---
+
+## Gemini Adversarial Review Revisions (2026-02-28)
+
+The following changes MUST be applied during implementation. They override the original task descriptions where they conflict.
+
+### R1: Decouple affiliate links from API (CRITICAL)
+
+**Removes:** The `/go/` redirect endpoint (routes/affiliate.py). Affiliate URLs go directly in the static HTML, not through the FastAPI backend.
+
+**Why:** If the homelab goes down, the static site still loads on Cloudflare's edge, but every affiliate link would fail if routed through the API. Revenue must never depend on homelab uptime.
+
+**Implementation:**
+- In Task 9 product pages: use the raw `affiliate_url` from the database directly in the `<a href>`. No `/go/` redirect.
+- Click tracking: add a lightweight `data-affiliate` attribute to affiliate links and a small inline JS snippet that fires a `navigator.sendBeacon()` to the API for tracking. If the API is down, the click still works (the user reaches the retailer), tracking just silently fails.
+- The `affiliate_clicks` table and tracking endpoint still exist in the API for analytics, but they are fire-and-forget, never in the critical purchase path.
+
+### R2: Stream CSV parsing (CRITICAL)
+
+**Applies to:** Task 6, AvantLinkAdapter.fetch_feed()
+
+**Change:** Do NOT load the full CSV response into memory. Stream the HTTP response to a temp file, then iterate with `csv.DictReader` line by line. Upsert in batches of 100. REI feeds can be hundreds of MB.
+
+```python
+async def fetch_feed(self, ...):
+    async with httpx.AsyncClient(timeout=300.0) as client:
+        async with client.stream("GET", self.BASE_URL, params=params) as resp:
+            resp.raise_for_status()
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+                async for chunk in resp.aiter_text():
+                    f.write(chunk)
+                tmp_path = f.name
+
+    with open(tmp_path) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            yield self._parse_row(row)  # Generator, not list
+
+    os.unlink(tmp_path)
+```
+
+### R3: Register asyncpg JSONB codec (CRITICAL)
+
+**Applies to:** Task 3, Database.connect()
+
+**Change:** Register JSONB type codec so asyncpg returns Python dicts instead of strings.
+
+```python
+import json
+
+async def connect(self):
+    self._pool = await asyncpg.create_pool(
+        settings.database_url,
+        min_size=2,
+        max_size=10,
+        init=self._init_connection,
+    )
+
+@staticmethod
+async def _init_connection(conn):
+    await conn.set_type_codec(
+        'jsonb',
+        encoder=json.dumps,
+        decoder=json.loads,
+        schema='pg_catalog',
+    )
+```
+
+### R4: Add daily feed sync scheduler (CRITICAL)
+
+**Applies to:** Task 10, new file `deploy/gearsift-sync.timer`
+
+```ini
+# deploy/gearsift-sync.timer
+[Unit]
+Description=Daily GearSift feed sync
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+```ini
+# deploy/gearsift-sync.service
+[Unit]
+Description=GearSift feed sync job
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root/gearsift/backend
+Environment=PATH=/root/gearsift/backend/.venv/bin:/usr/local/bin:/usr/bin
+ExecStart=/root/gearsift/backend/.venv/bin/python -m gearsift.ingest.cli sync rei --merchant-id <ID>
+ExecStartPost=/usr/bin/curl -s -X POST https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/<HOOK_ID>
+```
+
+### R5: AvantLink approval risk mitigation (CRITICAL)
+
+**Applies to:** Post-Phase 1 checklist, Task 11
+
+**Change:** Do not apply to AvantLink with a bare site. Phase 1 should launch with manually curated seed data (enough products to make the site look real) and 3-5 guide pages. Apply to AvantLink once the site has content and some organic traffic. The feed ingestion pipeline will be built and tested against mock CSV data until AvantLink credentials are obtained.
+
+Add to Task 6 tests: a mock CSV file with realistic AvantLink field names and dirty data (missing columns, malformed prices, empty rows).
+
+### R6: SEO meta tags (CRITICAL)
+
+**Applies to:** Tasks 8 and 9
+
+**Change:** Base layout must accept and inject:
+- `<title>` (dynamic per page)
+- `<meta name="description">` (dynamic per page)
+- `<link rel="canonical">` (full URL)
+- OpenGraph tags (og:title, og:description, og:image, og:url)
+- JSON-LD Product schema on product pages
+
+Product page title format: `{Product Name} by {Brand} | GearSift`
+Category page title format: `{Category Name} - Compare Specs & Prices | GearSift`
+
+### R7: Cloudflare Pages deploy hook after feed sync (IMPORTANT)
+
+**Applies to:** Task 6, run_feed_sync()
+
+**Change:** After a successful feed sync, trigger a Cloudflare Pages deploy hook to rebuild the static site with fresh data. Add `GEARSIFT_CF_DEPLOY_HOOK_URL` to config.py.
+
+### R8: Task reordering (IMPORTANT)
+
+**Execution order should be:** 1, 2, 7 (seed categories), 3, 4, 5, 6, 8, 9, 10, 11
+
+Move category and test product seeding before API development so endpoints can be tested against real data.
+
+### R9: Out-of-stock logic for missing feed products (IMPORTANT)
+
+**Applies to:** Task 6, run_feed_sync()
+
+**Change:** After processing the full feed, mark any `product_retailers` rows for this retailer that were NOT in today's feed as `in_stock = false`. Products that disappear from the feed are assumed out of stock, not deleted.
+
+```python
+# At the end of run_feed_sync(), after processing all products:
+await db.execute(
+    """
+    UPDATE gearsift.product_retailers
+    SET in_stock = false
+    WHERE retailer_id = $1
+      AND last_price_check < $2
+    """,
+    retailer_id,
+    sync_start_time,
+)
+```
+
+### R10: Cloudflare Pages build env (IMPORTANT)
+
+**Applies to:** Task 9, Task 10
+
+**Change:** Cloudflare Pages build environment must have `PUBLIC_API_URL` set to `https://api.gearsift.com` (via Cloudflare Tunnel), not localhost. Document this in the post-Phase 1 checklist: "Set PUBLIC_API_URL environment variable in Cloudflare Pages project settings."
+
+### R11: API pagination (IMPORTANT)
+
+**Applies to:** Task 5, category routes
+
+**Change:** Add `limit` and `offset` query parameters to the category products endpoint. Default limit=50, max limit=200.
+
+```python
+@router.get("/{slug}", response_model=CategoryWithProducts)
+async def get_category(slug: str, limit: int = 50, offset: int = 0):
+    # ... add LIMIT $2 OFFSET $3 to the products query
+```
+
+### R12: Remove React from Phase 1 (IMPORTANT)
+
+**Applies to:** Task 8
+
+**Change:** Do not install `@astrojs/react`, `react`, or `react-dom` in Phase 1. The entire site is static HTML. React islands are introduced in Phase 2 when the advisor quiz is built.
