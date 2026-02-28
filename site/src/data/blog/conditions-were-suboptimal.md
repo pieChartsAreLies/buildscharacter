@@ -18,5 +18,5 @@ This is where character is not merely built, but refined. The superficial layers
 
 There is no fanfare for enduring suboptimal conditions. No medals are awarded for simply not quitting when circumstances conspire against you. The reward is internal: a deepened understanding of one's own capacity, a quiet confidence forged in the crucible of unglamorous struggle. These are the moments that truly compound, forming the bedrock of sustained effort.
 
-The path of least resistance is always available. The path of deliberate difficulty, especially when conditions are suboptimal, requires a different kind of commitment. It is the commitment to showing up, to continuing, and to learning what you are capable of when the universe, for a brief period, decides to make things harder. These are the field notes from the edge of comfort. For further observations on the enduring nature of effort, subscribe to the BuildsCharacter.com Substack.
+The path of least resistance is always available. The path of deliberate difficulty, especially when conditions are suboptimal, requires a different kind of commitment. It is the commitment to showing up, to continuing, and to learning what you are capable of when the universe, for a brief period, decides to make things harder.
 

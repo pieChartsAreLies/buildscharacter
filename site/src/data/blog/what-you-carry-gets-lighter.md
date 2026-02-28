@@ -18,5 +18,5 @@ This process is rarely linear. There will be days when the weight feels heavier 
 
 The long-term impact of this sustained carrying is profound. It cultivates resilience, a deep-seated understanding that capacity is not fixed. It is built, incrementally, through a series of intentional engagements with difficulty. The challenges that once seemed insurmountable become merely benchmarks of a past self. The path ahead, while still demanding, is approached with a quiet confidence earned through prior endurance.
 
-This is the quiet truth of deliberate difficulty: the burden may remain, but your ability to bear it will expand. It is a testament to the compounding nature of effort, a fundamental principle for those who choose the harder path. For further field notes on the philosophy of deliberate difficulty, subscribe to the BuildsCharacter.com Substack.
+This is the quiet truth of deliberate difficulty: the burden may remain, but your ability to bear it will expand. It is a testament to the compounding nature of effort, a fundamental principle for those who choose the harder path.
 

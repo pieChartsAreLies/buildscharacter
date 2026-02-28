@@ -18,5 +18,5 @@ This daily recommitment, this decision to do it again tomorrow, cultivates a par
 
 The reward is not always immediate or visible. It often manifests as a quiet competence, an unshakeable resolve that emerges from the depths of repeated effort. You learn to trust the process, to value the routine, and to understand that the act of doing it again, tomorrow, is the most powerful statement of intent. It is a declaration that the long game is the only game.
 
-This is the silent pact you make with yourself: to endure the present difficulty for the sake of future capacity. It is the bedrock of mastery, the foundation of character. For further observations on the compounding nature of effort, subscribe to the BuildsCharacter.com Substack.
+This is the silent pact you make with yourself: to endure the present difficulty for the sake of future capacity. It is the bedrock of mastery, the foundation of character.
 

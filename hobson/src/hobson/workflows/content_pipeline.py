@@ -72,4 +72,7 @@ CRITICAL VOICE RULES FOR BLOG POSTS:
   rather than invented autobiography.
 - Revenue reports, AI transparency, and operational updates belong on Substack,
   NOT on the blog.
+- NEVER mention Substack, the newsletter, or any cross-promotion in blog posts.
+  The brand site and Substack are completely separate. No "subscribe to our
+  Substack" or "for more, visit" links. The blog stands alone.
 """
